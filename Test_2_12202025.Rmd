@@ -1,0 +1,470 @@
+---
+title: "Self-restraint as mediator"
+output: html_document
+date: "2025-10-07"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Notes:
+1. age corr
+2. re-do the SEM code, compare the result
+3. control the variable?
+4. three models...(for male and female)
+
+#1.cleaning
+```{r}
+input_path = "/Users/chuyuanxu/Desktop/Columbia/LGBTQ SEM/Self-restraint as a mediator"
+data <- read.csv(str_c(input_path, "/lgbtPKU.csv")) 
+```
+
+```{r}
+#!birth year=1999 or < 2000
+df <- data[!(data$Q3 %in% c(15,16)),]
+dim(df)
+```
+
+```{r}
+#renaming for categoricals and ordinals
+library(dplyr)
+library(tidyverse)
+df <- df %>%
+  rename(age = Q3,
+         nationality = Q4,
+         ethnicity = Q5,
+         department = Q6,
+         grade = Q7,
+         previous_residency = Q8,
+         sexual_orientation = Q12,
+         nonconformity_masculine = Q14,
+         nonconformity_feminine = Q15,
+         self_restraint_teacher = Q18,
+         out_to_queer_friends = Q23,
+         out_to_nonqueer_friends = Q24,
+         support_from_queer = Q25_行1,
+         support_from_nonqueer = Q25_行1,
+         )
+
+#manipulations
+df$documented_male <- 2 - df$Q9
+df$documented_female <- 1 - df$documented_male
+
+df$assigned_male <- ifelse(df$Q10 != 3, 2 - df$Q10, NA)
+df$assigned_female <- 1 - df$assigned_male
+
+df$cisgender <- 2 - df$Q11
+df$transgender <- 1 - df$cisgender
+
+df$singleness <- ifelse(df$Q13 == 3, 1, df$Q13)
+
+df$gn <- ifelse(df$nonconformity_masculine == -3, 
+             df$nonconformity_feminine, df$nonconformity_masculine)
+
+df$outness = 2 - df$Q16
+df$out_to_teacher = 2 - df$Q17
+
+#perceived LGBTQ+-affirming attitude
+df$perceived_acceptance_teacher = 5 - df$Q19
+df$perceived_acceptance_student = 5 - df$Q28
+
+df$victimization_teacher <- 1 - df$Q20_选项17
+df$victimization_student <- 1 - df$Q29_选项14
+#categorized victimization
+df <- df %>%
+  mutate(
+    ## ---- from teachers ----
+    victimization_teacher_expression = if_else(Q20_选项1 == 1 | Q20_选项4 == 1, 1, 0),
+    victimization_teacher_violence = if_else(Q20_选项2 == 1 | Q20_选项3 == 1 | Q20_选项5 == 1, 1, 0),
+    victimization_teacher_discrimination = if_else(Q20_选项6 == 1 | Q20_选项7 == 1 | Q20_选项8 == 1 | 
+                                                   Q20_选项9 == 1 | Q20_选项10 == 1 | Q20_选项11 == 1 | 
+                                                   Q20_选项12 == 1, 1, 0),
+    victimization_teacher_sexual_assault = if_else(Q20_选项13 == 1 | Q20_选项14 == 1, 1, 0),
+    victimization_teacher_conversion = if_else(Q20_选项15 == 1, 1, 0),
+
+    ## ---- from students ----
+    victimization_student_expression = if_else(Q20_选项1 == 1 | Q20_选项4 == 1, 1, 0),
+    victimization_student_violence = if_else(Q20_选项2 == 1 | Q20_选项3 == 1 | Q20_选项5 == 1, 1, 0),
+    victimization_student_discrimination = if_else(Q20_选项6 == 1 | Q20_选项7 == 1 | Q20_选项8 == 1 | 
+                                                   Q20_选项9 == 1, 1, 0),
+    victimization_student_sexual_assault = if_else(Q20_选项10 == 1 | Q20_选项11 == 1, 1, 0),
+    victimization_student_conversion = if_else(Q20_选项12 == 1, 1, 0)
+  )
+
+
+df$public_out = ifelse(df$Q21 != -3, 2 - df$Q21, NA)
+
+#sum up post-disclosure experiences, but not sure this would be used
+post_disclosure <- paste0("Q26_行", 1:7)
+df <- df %>%
+  mutate(
+    post_disclosure_microaggression = if_else(
+      outness == 1,
+      rowSums(across(all_of(post_disclosure))),
+      NA_real_)
+  )
+
+df$deliberate_concealment = 10 - df$Q27_行1 - df$Q27_行2
+df$deliberate_concealment_otherLGBTQ <- 5 - df$Q27_行1
+df$deliberate_concealment_otherstudents <- 5 - df$Q27_行2
+
+# self-esteem: Rosenberg Self-Esteem Scale, RSES
+df <- df %>%
+  mutate(
+    Q31_行3_r  = 6 - Q31_行3,
+    Q31_行5_r  = 6 - Q31_行5,
+    Q31_行8_r  = 6 - Q31_行8,
+    Q31_行9_r  = 6 - Q31_行9,
+    Q31_行10_r = 6 - Q31_行10)
+
+df <- df %>%
+  mutate(
+    self_esteem = rowSums(
+      select(., all_of(c(
+        "Q31_行1", "Q31_行2", "Q31_行3_r", "Q31_行4", "Q31_行5_r",
+        "Q31_行6", "Q31_行7", "Q31_行8_r", "Q31_行9_r", "Q31_行10_r"
+      ))),
+      na.rm = TRUE
+    )
+  )
+
+# depression: Center for Epidemiologic Studies Depression Scale, CESD 9-item Chinese version
+df <- df %>%
+  mutate(
+    Q30_行5_r = 5 - Q30_行5,
+    Q30_行7_r = 5 - Q30_行7)
+
+df <- df %>%
+  mutate(
+    depression = Q30_行1 + Q30_行2 + Q30_行3 + Q30_行4 + 
+                 Q30_行5_r + Q30_行6 + Q30_行7_r + Q30_行8 + Q30_行9
+  )
+
+#anxiety: Generalized Anxiety Disorder Scale, GAD-7
+df <- df %>%
+  mutate(
+    anxiety = rowSums(select(., all_of(c("Q32_行1", "Q32_行2", "Q32_行3", "Q32_行4", "Q32_行5", "Q32_行6", "Q32_行7"))),
+                      na.rm = TRUE))
+```
+
+```{r}
+#drop cases with inconsistent answers concerning gender identity
+df <- df %>%
+  filter(
+    !(
+      (Q9==1 & Q10==2 & Q11==1)|
+      (Q9==2 & Q10==1 & Q11==1)
+    )
+  )
+
+#LGBTQ+ variable
+df <- df %>%
+  mutate(
+    LGBTQ = case_when(
+      Q9 == 1 & Q10 == 1 & Q11 == 1 & sexual_orientation == 2 ~ 0,
+      Q9 == 2 & Q10 == 2 & Q11 == 1 & sexual_orientation == 2 ~ 0,
+      TRUE ~ 1
+    )
+  )
+
+#only LGBTQ+ data frame
+df1 <- df %>%
+  filter(LGBTQ == 1)
+
+dim(df1)
+```
+
+```{r}
+df_f <- df %>%
+  filter(documented_female == 1)
+df_m <- df %>%
+  filter(documented_male == 1)
+```
+
+#basic relations
+```{r}
+correlations_table <- function(df, var_pairs, method = "pearson") {
+  results <- lapply(var_pairs, function(pair) {
+    x <- df[[pair[1]]]
+    y <- df[[pair[2]]]
+    
+    test <- cor.test(x, y, method = method, use = "pairwise.complete.obs")
+
+    p_display <- ifelse(test$p.value < 0.05, sprintf("%.3f*", test$p.value), sprintf("%.3f", test$p.value))
+    
+    data.frame(
+      var1 = pair[1],
+      var2 = pair[2],
+      r = sprintf("%.2f", test$estimate),
+      p_value = p_display
+    )
+  })
+  
+  do.call(rbind, results)
+}
+
+var_pairs <- list(
+  c("deliberate_concealment","victimization_student"),
+  c("self_restraint_teacher","victimization_teacher"),
+  c("depression","victimization_teacher"),
+  c("depression","self_restraint_teacher"),
+  c("depression","victimization_student"),
+  c("depression","deliberate_concealment"),
+  c("anxiety","victimization_teacher"),
+  c("anxiety","self_restraint_teacher"),
+  c("anxiety","victimization_student"),
+  c("anxiety","deliberate_concealment")
+)
+
+cor_results_df1 <- correlations_table(df1, var_pairs)
+print(cor_results_df1)
+
+cor_results_df_f <- correlations_table(df_f, var_pairs)
+print(cor_results_df_f)
+
+cor_results_df_m <- correlations_table(df_m, var_pairs)
+print(cor_results_df_m)
+
+ggcorrplot(cor_results_df1)
+```
+
+
+#dep in df_m
+
+```{r}
+model_d_s_df_m <- '
+  # direct effect
+  depression ~ c*victimization_student
+
+  # Path 
+  deliberate_concealment ~ a*victimization_student
+  depression ~ b*deliberate_concealment
+  
+  #Covariates
+  deliberate_concealment ~ self_esteem + outness
+  depression ~ self_esteem + outness
+
+  # allow correlations
+  victimization_student ~~ self_esteem
+  victimization_student ~~ outness
+  
+  indirect := a*b
+  total_effect := c + indirect
+'
+
+fit_d_s_df_m <- sem(model_d_s_df_m, data = df_m, missing = "fiml", se = "bootstrap", bootstrap = 1000) 
+summary(fit_d_s_df_m, standardized = TRUE, fit.measures = TRUE, rsquare = TRUE)
+```
+
+#anx in df_m
+```{r}
+#anxiety
+model_a_s_df_m <- '
+  # direct effect
+  anxiety ~ c*victimization_teacher
+
+  # Path 
+  self_restraint_teacher ~ a*victimization_teacher
+  anxiety ~ b*self_restraint_teacher
+  
+  #Covariates
+  self_restraint_teacher ~ self_esteem + outness
+  anxiety ~ self_esteem + outness
+
+  # allow correlations
+  victimization_teacher ~~ self_esteem
+  victimization_teacher ~~ outness
+  
+  indirect := a*b
+  total_effect := c + indirect
+'
+
+fit_a_s_df_m <- sem(model_a_s_df_m, data = df_m, missing = "fiml", se = "bootstrap", bootstrap = 1000) 
+summary(fit_a_s_df_m, standardized = TRUE, fit.measures = TRUE, rsquare = TRUE)
+
+```
+
+#basic SEM
+```{r}
+#depression teacher
+library(lavaan)
+model_d_t <- '
+  # direct effect
+  depression ~ c*victimization_teacher
+
+  # Path 
+  self_restraint_teacher ~ a*victimization_teacher
+  depression ~ b*self_restraint_teacher
+  
+  #Covariates
+  self_restraint_teacher ~ documented_female
+  depression ~ documented_female
+  victimization_teacher ~ documented_female
+  
+  indirect := a*b
+  total_effect := c + indirect
+'
+
+fit1 <- sem(model_d_t, data = df1, missing = "fiml", se = "bootstrap", bootstrap = 1000) 
+summary(fit1, standardized = TRUE, fit.measures = TRUE, rsquare = TRUE)
+```
+
+```{r}
+#anxiety teacher
+library(lavaan)
+model_a_t <- '
+  # direct effect
+  anxiety ~ c*victimization_teacher
+
+  # Path 
+  self_restraint_teacher ~ a*victimization_teacher
+  anxiety ~ b*self_restraint_teacher
+  
+  #Covariates
+  self_restraint_teacher ~ documented_female
+  anxiety ~ documented_female
+  victimization_teacher ~ documented_female
+  
+  indirect := a*b
+  total_effect := c + indirect
+'
+
+fit1 <- sem(model_a_t, data = df1, missing = "fiml", se = "bootstrap", bootstrap = 1000) 
+summary(fit1, standardized = TRUE, fit.measures = TRUE, rsquare = TRUE)
+```
+
+```{r}
+#anxiety student
+model_a_s <- '
+  # direct effect
+  anxiety ~ c*victimization_student
+
+  # Path 
+  deliberate_concealment ~ a*victimization_student
+  anxiety ~ b*deliberate_concealment
+  
+  #Covariates
+  deliberate_concealment ~ documented_female
+  anxiety ~ documented_female
+  victimization_student ~ documented_female
+  
+  indirect := a*b
+  total_effect := c + indirect
+'
+
+fit1 <- sem(model_a_s, data = df1, missing = "fiml", se = "bootstrap", bootstrap = 1000) 
+summary(fit1, standardized = TRUE, fit.measures = TRUE, rsquare = TRUE)
+```
+
+# SEM1 depression teacher
+```{r}
+# SEM1: victimization_teacher -> self_restraint_teacher -> depression
+library(lavaan)
+model1 <- '
+  # direct effect
+  depression ~ c*victimization_teacher
+
+  # Path 
+  self_restraint_teacher ~ a*victimization_teacher
+  depression ~ b*self_restraint_teacher
+  
+  #Covariates
+  self_restraint_teacher ~ self_esteem + outness + documented_female
+  depression ~ self_esteem + outness + documented_female
+  victimization_teacher ~ documented_female
+
+  # allow correlations
+  victimization_teacher ~~ self_esteem
+  victimization_teacher ~~ outness
+  
+  indirect := a*b
+  total_effect := c + indirect
+'
+
+fit1 <- sem(model1, data = df1, missing = "fiml", se = "bootstrap", bootstrap = 1000) 
+summary(fit1, standardized = TRUE, fit.measures = TRUE, rsquare = TRUE)
+```
+
+# SEM2 depression students
+```{r}
+# SEM2: victimization_student -> deliberate_concealment -> depression
+model2 <- '
+  # direct effect
+  depression ~ c*victimization_student
+
+  # Path 
+  deliberate_concealment ~ a*victimization_student
+  depression ~ b*deliberate_concealment
+  
+  #Covariates
+  deliberate_concealment ~ self_esteem + outness + documented_female
+  depression ~ self_esteem + outness + documented_female
+  victimization_student ~ documented_female
+
+  # allow correlations
+  victimization_student ~~ self_esteem
+  victimization_student ~~ outness
+  
+  indirect := a*b
+  total_effect := c + indirect
+'
+
+fit2 <- sem(model2, data = df1, missing = "fiml", se = "bootstrap", bootstrap = 1000) 
+summary(fit2, standardized = TRUE, fit.measures = TRUE, rsquare = TRUE)
+```
+
+#SEM3 anxiety teachers
+```{r}
+model3 <- '
+  # direct effect
+  anxiety ~ c*victimization_teacher
+
+  # Path 
+  self_restraint_teacher ~ a*victimization_teacher
+  anxiety ~ b*self_restraint_teacher
+  
+  #Covariates
+  self_restraint_teacher ~ self_esteem + outness + documented_female
+  anxiety ~ self_esteem + outness + documented_female
+  victimization_teacher ~ documented_female
+
+  # allow correlations
+  victimization_teacher ~~ self_esteem
+  victimization_teacher ~~ outness
+  
+  indirect := a*b
+  total_effect := c + indirect
+'
+
+fit1 <- sem(model3, data = df1, missing = "fiml", se = "bootstrap", bootstrap = 1000) 
+summary(fit1, standardized = TRUE, fit.measures = TRUE, rsquare = TRUE)
+
+```
+
+#SEM4 anxiety students
+```{r}
+model4 <- '
+  # direct effect
+  anxiety ~ c*victimization_student
+
+  # Path 
+  deliberate_concealment ~ a*victimization_student
+  anxiety ~ b*deliberate_concealment
+  
+  #Covariates
+  deliberate_concealment ~ self_esteem + outness + documented_female
+  anxiety ~ self_esteem + outness + documented_female
+  victimization_student ~ documented_female
+
+  # allow correlations
+  victimization_student ~~ self_esteem
+  victimization_student ~~ outness
+  
+  indirect := a*b
+  total_effect := c + indirect
+'
+
+fit2 <- sem(model2, data = df1, missing = "fiml", se = "bootstrap", bootstrap = 1000) 
+summary(fit2, standardized = TRUE, fit.measures = TRUE, rsquare = TRUE)
+```
