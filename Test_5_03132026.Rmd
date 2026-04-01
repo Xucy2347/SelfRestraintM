@@ -1,6 +1,8 @@
 ---
 title: "Self-restraint as mediator"
-output: html_document
+output: 
+  html_document:
+    code_folding: hide
 date: "2025-10-07"
 ---
 
@@ -8,21 +10,16 @@ date: "2025-10-07"
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
 #1. Cleaning
 ```{r}
-df <- read.csv("C:/Users/sy3248/Desktop/Self-restraint/lgbtPKU.csv")
+df <- read.csv("lgbtPKU.csv")
 dim(df)
+
+library(dplyr)
+library(tidyverse)
 ```
 
 ```{r}
-library(dplyr)
-library(tidyverse)
 #renaming for categoricals and ordinals
 df <- df %>%
   rename(age = Q3,
