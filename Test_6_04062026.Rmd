@@ -1,30 +1,28 @@
 ---
 title: "Self-restraint as mediator"
-output: html_document
-date: "2025-10-07"
+date: "2026-04-06"
+author: "Shichange Yang"
+output: 
+  html_document:
+    code_folding: hide
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
+# 1. Cleaning
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-#1. Cleaning
 ```{r}
-df <- read.csv("C:/Users/sy3248/Desktop/Self-restraint/lgbtPKU.csv")
+df <- read.csv("lgbtPKU.csv")
 dim(df)
 ```
-
 
 ```{r}
 library(dplyr)
 library(tidyverse)
-#renaming for categoricals and ordinals
+
+# renaming for categorical and ordinals
 df <- df %>%
   rename(nationality = Q4,
          ethnicity = Q5,
@@ -147,12 +145,14 @@ df1 <- df %>%
   filter(!((documented_female == 1 & assigned_male == 1 & transgender == 0) | (documented_male == 1 & assigned_female == 1 & transgender == 0)) %in% TRUE)
 dim(df1)
 ```
+
 ```{r}
 #drop two
 df1 <- df1 %>%
   filter(!(LGBTQ == 0 & outness == 1))
 dim(df1)
 ```
+
 ```{r}
 #drop inconsistent case
 #constantly filling the same value for multiple question matrices
@@ -160,6 +160,7 @@ df1 <- df1 %>%
   filter(!(index == 1273))
 dim(df1)
 ```
+
 ```{r}
 #drop age under 18
 df1 <- df1 %>%
@@ -167,8 +168,9 @@ df1 <- df1 %>%
 dim(df1)
 ```
 
-#2. Descriptives
-##2.1. dem & exp
+# 2. Descriptives
+
+## 2.1. dem & exp
 ```{r}
 df1 %>%
   select(LGBTQ, documented_female, transgender, sexual_orientation, 
@@ -177,12 +179,14 @@ df1 %>%
          victimization_teacher, victimization_student, victimization_ever ) %>%
   summary
 ```
+
 ```{r}
 #value counts
 lapply(df1[,c('LGBTQ','sexual_orientation', 'gn', 'outness', 'out_to_queer_friends', 
               'out_to_nonqueer_friends', 'out_to_teacher', 'public_out',
              'nationality', 'age', 'victimization_teacher', 'victimization_student', 'victimization_ever')], table)
 ```
+
 ```{r}
 library(psych)
 describe(df1[, c("depression", "anxiety")])
@@ -192,8 +196,8 @@ aggregate(anxiety ~ LGBTQ, data = df1, mean)
 aggregate(anxiety ~ LGBTQ, data = df1, sd)
 ```
 
+## 2.2. s-restr
 
-##2.2. s-restr
 ```{r}
 #self-restraint
 table(df1$self_restraint_teacher)
@@ -211,14 +215,13 @@ alpha_sr <- alpha(df1[, c("self_restraint_teacher", "self_restraint_otherLGBTQ",
 print(alpha_sr)
 ```
 
-
-
 ```{r}
 #Cronbach's alpha
 library(psych)
 alpha(df1[c("self_restraint_teacher", "self_restraint_otherLGBTQ", "self_restraint_otherstudents")])
 #not valid for this formative construct
 ```
+
 ```{r}
 #correlation
 cor(df1[,c("self_restraint_teacher",
@@ -268,7 +271,7 @@ aggregate(gn ~ LGBTQ, data = df1, sd)
 
 
 
-#2.3. victm
+## 2.3. victm
 ```{r}
 lapply(df1[, paste0('Q20_选项',1:15)], table)
 lapply(df1[, paste0('Q29_选项', 1:12)], table)
@@ -346,7 +349,7 @@ aggregate(victimization_sum ~ LGBTQ, data =df1, sd)
 ```
 
 
-#2.4. outness
+## 2.4. outness
 ```{r}
 #convert 1-5 to 0-1
 df1$out_to_teacher_norm <- df1$out_to_teacher
@@ -366,7 +369,7 @@ summary(df1$outness_sum)
 ```
 
 
-#3. Associations
+# 3. Associations
 ```{r}
 keyvariables <- c("depression","anxiety", "LGBTQ", "documented_female", "age", 
                   "victimization_sum", "gn", "outness_sum", "self_esteem", "self_restraint","outness_sum")
@@ -389,7 +392,7 @@ corrplot(corr_matrix,
 ```
 
 
-#5. S1 LGBTQ Identity
+# 4. S1 LGBTQ Identity
 ```{r}
 #simple linear regression: Mental health ~ LGBTQ+ identity
 s1s1_dep_model <- lm(depression ~ LGBTQ, data = df1)
@@ -399,7 +402,7 @@ s1s1_anx_model <- lm(anxiety ~ LGBTQ, data = df1)
 summary(s1s1_anx_model)
 ```
 
-#5.1. S1 dep
+## 4.1. S1 dep
 ```{r}
 library('lavaan')
 # SEM: Identity -> victimization + self-restrain -> depression
@@ -432,7 +435,7 @@ s1_dep_fit <- sem(s1_dep_model, data=df1, estimator="ML", se="bootstrap" , boots
 summary(s1_dep_fit, standardized=TRUE, fit.measures=TRUE)
 ```
 
-# 5.2. S1 anx
+## 4.2. S1 anx
 ```{r}
 # SEM: Identity -> victimization + self-restrain -> anxiety
 s1_anx_model <- '
@@ -465,7 +468,7 @@ summary(s1_anx_fit, standardized=TRUE, fit.measures=TRUE)
 
 ```
 
-#6. S2 GN
+# 6. S2 GN
 ```{r}
 #simple linear regression: Mental health ~ Gender nonconformity
 s2s1_dep_model <- lm(depression ~ gn, data = df1)
@@ -475,7 +478,7 @@ s2s1_anx_model <- lm(anxiety ~ gn, data = df1)
 summary(s2s1_anx_model)
 ```
 
-#6.1. S2 dep
+## 6.1. S2 dep
 
 ```{r}
 # SEM: Gender nonconformity -> victimization + self-restrain -> depression
@@ -517,7 +520,8 @@ s2_dep_model <- '
 s2_dep_fit <- sem(s2_dep_model, data=df1, estimator="ML", se="bootstrap" , bootstrap=1000)
 summary(s2_dep_fit, standardized=TRUE, fit.measures=TRUE)
 ```
-#6.1.1 moderated by LGBTQ
+
+## 6.1.1 moderated by LGBTQ
 ```{r}
 #with LGBTQ as moderator
 df1$interaction_gn_LGBTQ <- df1$gn * df1$LGBTQ
@@ -566,7 +570,7 @@ s2_dep_fit_moderated <- sem(s2_dep_model_moderated, data=df1, estimator="ML", se
 summary(s2_dep_fit_moderated, standardized=TRUE, fit.measures=TRUE)
 ```
 
-#6.2. S2 anx
+## 6.2. S2 anx
 ```{r}
 # SEM: Gender nonconformity -> victimization + self-restrain -> anxiety
 s2_anx_model <- '
@@ -608,7 +612,7 @@ s2_anx_fit <- sem(s2_anx_model, data=df1, estimator="ML", se="bootstrap" , boots
 summary(s2_anx_fit, standardized=TRUE, fit.measures=TRUE)
 ```
 
-#6.2.1 moderated by LGBTQ
+## 6.2.1 moderated by LGBTQ
 ```{r}
 #with LGBTQ as moderator
 # SEM: Gender nonconformity -> victimization + self-restrain -> anxiety
@@ -654,9 +658,7 @@ s2_anx_fit_moderated <- sem(s2_anx_model_moderated, data=df1, estimator="ML", se
 summary(s2_anx_fit_moderated, standardized=TRUE, fit.measures=TRUE)
 ```
 
-
-
-#7. robustness
+# 7. robustness
 ```{r}
 #interaction terms
 df1$interaction_se_gn <- df1$gn * df1$self_esteem
@@ -664,7 +666,7 @@ df1$interaction_se_sr <- df1$self_esteem * df1$self_restraint
 df1$interaction_se_victimization <- df1$self_esteem * df1$victimization_sum
 ```
 
-#7.1 Rob dep
+## 7.1 Rob dep
 ```{r}
 #dep
 s3_dep_model <- '
@@ -703,7 +705,7 @@ summary(s3_dep_fit, standardized=TRUE, fit.measures=TRUE)
 
 ```
 
-#7.2 Rob anx
+## 7.2 Rob anx
 ```{r}
 #anx
 s3_anx_model <- '
@@ -742,8 +744,9 @@ summary(s3_anx_fit, standardized=TRUE, fit.measures=TRUE)
 
 ```
 
-#8. sensitivity
-#8.1. victim count
+# 8. sensitivity
+
+## 8.1. victim count
 ```{r}
 #substitution: victimization_count
 s4_dep_model <- '
@@ -822,7 +825,7 @@ s4_anx_fit <- sem(s4_anx_model, data=df1, estimator="ML", se="bootstrap" , boots
 summary(s4_anx_fit, standardized=TRUE, fit.measures=TRUE)
 ```
 
-#8.2. victim ever
+## 8.2. victim ever
 ```{r}
 #substitution: victimization_ever
 s5_dep_model <- '
@@ -902,7 +905,7 @@ s5_anx_fit <- sem(s5_anx_model, data=df1, estimator="ML", se="bootstrap" , boots
 summary(s5_anx_fit, standardized=TRUE, fit.measures=TRUE)
 ```
 
-#8.3. binary outness
+## 8.3. binary outness
 ```{r}
 s6_dep_model <- '
   # outcome
@@ -975,14 +978,3 @@ s6_anx_model <- '
 s6_anx_fit <- sem(s6_anx_model, data=df1, estimator="ML", se="bootstrap" , bootstrap=1000)
 summary(s6_anx_fit, standardized=TRUE, fit.measures=TRUE)
 ```
-
-
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
