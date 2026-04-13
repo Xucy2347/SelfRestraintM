@@ -8,6 +8,11 @@ output:
 ---
 
 ```{r setup, include=FALSE}
+library(dplyr)
+library(tidyverse)
+library(lavaan)
+library(semPlot)
+
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
@@ -19,9 +24,6 @@ dim(df)
 ```
 
 ```{r}
-library(dplyr)
-library(tidyverse)
-
 # renaming for categorical and ordinals
 df <- df %>%
   rename(nationality = Q4,
@@ -186,6 +188,10 @@ lapply(df1[,c('LGBTQ','sexual_orientation', 'gn', 'outness', 'out_to_queer_frien
               'out_to_nonqueer_friends', 'out_to_teacher', 'public_out',
              'nationality', 'age', 'victimization_teacher', 'victimization_student', 'victimization_ever')], table)
 ```
+```{r}
+
+```
+
 
 ```{r}
 library(psych)
@@ -376,6 +382,7 @@ keyvariables <- c("depression","anxiety", "LGBTQ", "documented_female", "age",
 
 corr.test(df1[, keyvariables])
 ```
+
 ```{r}
 corr_res <- corr.test(df1[, keyvariables])
 corr_matrix <- corr_res$r
@@ -404,8 +411,9 @@ summary(s1s1_anx_model)
 
 ## 4.1. S1 dep
 ```{r}
-library('lavaan')
+
 # SEM: Identity -> victimization + self-restrain -> depression
+
 s1_dep_model <- '
   # outcome
   depression ~ a*LGBTQ + b*victimization_sum + c*self_restraint + f1*documented_female
@@ -431,8 +439,12 @@ s1_dep_model <- '
   total_effect := a + total_indirect
 '
 
-s1_dep_fit <- sem(s1_dep_model, data=df1, estimator="ML", se="bootstrap" , bootstrap=1000)
+s1_dep_fit <- sem(s1_dep_model, data=df1, estimator="ML", se = "bootstrap" , bootstrap=1000)
 summary(s1_dep_fit, standardized=TRUE, fit.measures=TRUE)
+
+semPaths(s1_dep_fit)
+semPaths(s1_dep_fit, intercept = FALSE, what = "std", whatLabels="std", reorder = FALSE, 
+         rainbow = .5, rotation = 2, layout = "spring")
 ```
 
 ## 4.2. S1 anx
@@ -466,6 +478,9 @@ s1_anx_model <- '
 s1_anx_fit <- sem(s1_anx_model, data=df1, estimator="ML", se="bootstrap" , bootstrap=1000)
 summary(s1_anx_fit, standardized=TRUE, fit.measures=TRUE)
 
+semPaths(s1_anx_fit)
+semPaths(s1_anx_fit, intercept = FALSE, what = "std", whatLabels="std", reorder = FALSE, 
+         rainbow = .5, rotation = 2, layout = "spring")
 ```
 
 # 6. S2 GN
@@ -519,6 +534,10 @@ s2_dep_model <- '
 
 s2_dep_fit <- sem(s2_dep_model, data=df1, estimator="ML", se="bootstrap" , bootstrap=1000)
 summary(s2_dep_fit, standardized=TRUE, fit.measures=TRUE)
+
+semPaths(s2_dep_fit)
+semPaths(s2_dep_fit, intercept = FALSE, what = "std", whatLabels="std", reorder = FALSE, 
+         rainbow = .5, rotation = 2, layout = "spring")
 ```
 
 ## 6.1.1 moderated by LGBTQ
@@ -568,6 +587,10 @@ s2_dep_model_moderated <- '
 
 s2_dep_fit_moderated <- sem(s2_dep_model_moderated, data=df1, estimator="ML", se="bootstrap" , bootstrap=1000)
 summary(s2_dep_fit_moderated, standardized=TRUE, fit.measures=TRUE)
+
+semPaths(s2_dep_fit_moderated)
+semPaths(s2_dep_fit_moderated, intercept = FALSE, what = "std", whatLabels="std", reorder = FALSE, 
+         rainbow = .5, rotation = 2, layout = "spring")
 ```
 
 ## 6.2. S2 anx
@@ -610,6 +633,10 @@ s2_anx_model <- '
 
 s2_anx_fit <- sem(s2_anx_model, data=df1, estimator="ML", se="bootstrap" , bootstrap=1000)
 summary(s2_anx_fit, standardized=TRUE, fit.measures=TRUE)
+
+semPaths(s2_anx_fit)
+semPaths(s2_anx_fit, intercept = FALSE, what = "std", whatLabels="std", reorder = FALSE, 
+         rainbow = .5, rotation = 2, layout = "spring")
 ```
 
 ## 6.2.1 moderated by LGBTQ
@@ -656,6 +683,10 @@ s2_anx_model_moderated <- '
 
 s2_anx_fit_moderated <- sem(s2_anx_model_moderated, data=df1, estimator="ML", se="bootstrap" , bootstrap=1000)
 summary(s2_anx_fit_moderated, standardized=TRUE, fit.measures=TRUE)
+
+semPaths(s2_anx_fit_moderated)
+semPaths(s2_anx_fit_moderated, intercept = FALSE, what = "std", whatLabels="std", reorder = FALSE, 
+         rainbow = .5, rotation = 2, layout = "spring")
 ```
 
 # 7. robustness
@@ -703,6 +734,9 @@ s3_dep_model <- '
 s3_dep_fit <- sem(s3_dep_model, data=df1, estimator="ML", se="bootstrap" , bootstrap=1000)
 summary(s3_dep_fit, standardized=TRUE, fit.measures=TRUE)
 
+semPaths(s3_dep_fit)
+semPaths(s3_dep_fit, intercept = FALSE, what = "std", whatLabels="std", reorder = FALSE, 
+         rainbow = .5, rotation = 2, layout = "spring")
 ```
 
 ## 7.2 Rob anx
@@ -742,6 +776,9 @@ s3_anx_model <- '
 s3_anx_fit <- sem(s3_anx_model, data=df1, estimator="ML", se="bootstrap" , bootstrap=1000)
 summary(s3_anx_fit, standardized=TRUE, fit.measures=TRUE)
 
+semPaths(s3_anx_fit)
+semPaths(s3_anx_fit, intercept = FALSE, what = "std", whatLabels="std", reorder = FALSE, 
+         rainbow = .5, rotation = 2, layout = "spring")
 ```
 
 # 8. sensitivity
@@ -785,6 +822,10 @@ s4_dep_model <- '
 
 s4_dep_fit <- sem(s4_dep_model, data=df1, estimator="ML", se="bootstrap" , bootstrap=1000)
 summary(s4_dep_fit, standardized=TRUE, fit.measures=TRUE)
+
+semPaths(s4_dep_fit)
+semPaths(s4_dep_fit, intercept = FALSE, what = "std", whatLabels="std", reorder = FALSE, 
+         rainbow = .5, rotation = 2, layout = "spring")
 ```
 ```{r}
 s4_anx_model <- '
@@ -823,6 +864,10 @@ s4_anx_model <- '
 
 s4_anx_fit <- sem(s4_anx_model, data=df1, estimator="ML", se="bootstrap" , bootstrap=1000)
 summary(s4_anx_fit, standardized=TRUE, fit.measures=TRUE)
+
+semPaths(s4_anx_fit)
+semPaths(s4_anx_fit, intercept = FALSE, what = "std", whatLabels="std", reorder = FALSE, 
+         rainbow = .5, rotation = 2, layout = "spring")
 ```
 
 ## 8.2. victim ever
@@ -864,6 +909,10 @@ s5_dep_model <- '
 
 s5_dep_fit <- sem(s5_dep_model, data=df1, estimator="ML", se="bootstrap" , bootstrap=1000)
 summary(s5_dep_fit, standardized=TRUE, fit.measures=TRUE)
+
+semPaths(s5_dep_fit)
+semPaths(s5_dep_fit, intercept = FALSE, what = "std", whatLabels="std", reorder = FALSE, 
+         rainbow = .5, rotation = 2, layout = "spring")
 ```
 
 ```{r}
@@ -903,6 +952,10 @@ s5_anx_model <- '
 
 s5_anx_fit <- sem(s5_anx_model, data=df1, estimator="ML", se="bootstrap" , bootstrap=1000)
 summary(s5_anx_fit, standardized=TRUE, fit.measures=TRUE)
+
+semPaths(s5_anx_fit)
+semPaths(s5_anx_fit, intercept = FALSE, what = "std", whatLabels="std", reorder = FALSE, 
+         rainbow = .5, rotation = 2, layout = "spring")
 ```
 
 ## 8.3. binary outness
@@ -943,6 +996,10 @@ s6_dep_model <- '
 
 s6_dep_fit <- sem(s6_dep_model, data=df1, estimator="ML", se="bootstrap" , bootstrap=1000)
 summary(s6_dep_fit, standardized=TRUE, fit.measures=TRUE)
+
+semPaths(s6_dep_fit)
+semPaths(s6_dep_fit, intercept = FALSE, what = "std", whatLabels="std", reorder = FALSE, 
+         rainbow = .5, rotation = 2, layout = "spring")
 ```
 
 ```{r}
@@ -977,4 +1034,8 @@ s6_anx_model <- '
 
 s6_anx_fit <- sem(s6_anx_model, data=df1, estimator="ML", se="bootstrap" , bootstrap=1000)
 summary(s6_anx_fit, standardized=TRUE, fit.measures=TRUE)
+
+semPaths(s6_anx_fit)
+semPaths(s6_anx_fit, intercept = FALSE, what = "std", whatLabels="std", reorder = FALSE, 
+         rainbow = .5, rotation = 2, layout = "spring")
 ```
