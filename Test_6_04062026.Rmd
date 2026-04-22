@@ -186,6 +186,37 @@ lapply(df1[,c('LGBTQ','sexual_orientation', 'gn', 'outness', 'out_to_queer_frien
               'out_to_nonqueer_friends', 'out_to_teacher', 'public_out',
              'nationality', 'age', 'victimization_teacher', 'victimization_student', 'victimization_ever')], table)
 ```
+```{r}
+#output
+library(openxlsx)
+
+df1$age_group <- cut(df1$age,
+                     breaks = c(18, 20, 22, 24, 26, Inf),
+                     right = FALSE)
+
+descriptive_vars <- c('transgender','sexual_orientation', 'age_group' , 'documented_female')
+
+result <- lapply(descriptive_vars, function(v) {
+  as.data.frame(table(
+    Variable = rep(v, nrow(df1)),
+    Category = df1[[v]],
+    LGBTQ = df1$LGBTQ,
+    useNA = "ifany"
+  ))
+}) %>% bind_rows()
+
+result_prop <- result %>%
+  group_by(Variable, LGBTQ) %>%
+  mutate(
+    Percent = Freq / sum(Freq),
+    Percent_label = paste0(round(Percent * 100, 2), "%")
+  ) %>%
+  ungroup()
+
+write.xlsx(result_prop, "demographics.xlsx", overwrite = TRUE)
+```
+
+
 
 ```{r}
 library(psych)
@@ -211,14 +242,13 @@ summary(df1$self_restraint)
 
 ```{r}
 library(psych)
-alpha_sr <- alpha(df1[, c("self_restraint_teacher", "self_restraint_otherLGBTQ", "self_restraint_otherstudents")])
+alpha_sr <- psych::alpha(df1[, c("self_restraint_teacher", "self_restraint_otherLGBTQ", "self_restraint_otherstudents")])
 print(alpha_sr)
 ```
 
 ```{r}
 #Cronbach's alpha
-library(psych)
-alpha(df1[c("self_restraint_teacher", "self_restraint_otherLGBTQ", "self_restraint_otherstudents")])
+psych::alpha(df1[c("self_restraint_teacher", "self_restraint_otherLGBTQ", "self_restraint_otherstudents")])
 #not valid for this formative construct
 ```
 
@@ -372,10 +402,46 @@ summary(df1$outness_sum)
 # 3. Associations
 ```{r}
 keyvariables <- c("depression","anxiety", "LGBTQ", "documented_female", "age", 
-                  "victimization_sum", "gn", "outness_sum", "self_esteem", "self_restraint","outness_sum")
+                  "victimization_sum", "gn", "outness_sum", "self_esteem", "self_restraint")
 
-corr.test(df1[, keyvariables])
+res <- corr.test(df1[, keyvariables])
+r_mat <- res$r
+p_mat <- res$p
+
+get_stars <- function(p){
+  ifelse(p < .001, "***",
+  ifelse(p < .01,  "**",
+  ifelse(p < .05,  "*", "")))
+}
+
+corr_table <- matrix("", nrow = ncol(r_mat), ncol = ncol(r_mat))
+rownames(corr_table) <- colnames(r_mat)
+colnames(corr_table) <- colnames(r_mat)
+
+for(i in 1:ncol(r_mat)){
+  for(j in 1:ncol(r_mat)){
+    
+    if(i <= j){
+      corr_table[i, j] <- ""
+    } else {
+      r <- round(r_mat[i, j], 2)
+      p <- p_mat[i, j]
+      stars <- get_stars(p)
+      corr_table[i, j] <- paste0(r, stars)
+    }
+  }
+}
+
+write.xlsx(corr_table, "correlation.xlsx", overwrite = TRUE)
 ```
+
+```{r}
+res <- psych::corr.test(df1[, keyvariables])
+res$r
+res$p
+```
+
+
 ```{r}
 corr_res <- corr.test(df1[, keyvariables])
 corr_matrix <- corr_res$r
@@ -386,10 +452,40 @@ library(corrplot)
 corrplot(corr_matrix, 
          method = "circle", 
          type = "lower",
-         p.mat = p_matrix,       # 传入 p 值矩阵
-         sig.level = 0.05,       # 显著性阈值
+         p.mat = p_matrix, 
+         sig.level = 0.05, 
          insig = "pch") 
 ```
+```{r}
+MaxMinMeanSD <- df1 %>%
+  select(all_of(keyvariables)) %>%
+  summarise(across(everything(),
+                   list(
+                     Min  = ~min(., na.rm = TRUE),
+                     Max  = ~max(., na.rm = TRUE),
+                     Mean = ~mean(., na.rm = TRUE),
+                     SD   = ~sd(., na.rm = TRUE)
+                   ))) %>%
+  pivot_longer(cols = everything(),
+               names_to = c("Variable", ".value"),
+               names_pattern = "(.+)_(Min|Max|Mean|SD)")
+write.xlsx(MaxMinMeanSD, "MaxMinMeanSD.xlsx", overwrite = TRUE)
+```
+
+```{r}
+#table1 part2
+library(gtsummary)
+df1 %>%
+  select(LGBTQ, age, gn, self_restraint, victimization_sum, depression, anxiety) %>%
+  tbl_summary(
+    by = LGBTQ,
+    type = gn ~ "continuous",
+    statistic = all_continuous() ~ "{mean} ({sd})",
+    digits = all_continuous() ~ 2,
+    missing = "no"
+  )
+```
+
 
 
 # 4. S1 LGBTQ Identity
@@ -402,7 +498,7 @@ s1s1_anx_model <- lm(anxiety ~ LGBTQ, data = df1)
 summary(s1s1_anx_model)
 ```
 
-## 4.1. S1 dep
+<!-- ## 4.1. S1 dep -->
 ```{r}
 library('lavaan')
 # SEM: Identity -> victimization + self-restrain -> depression
