@@ -1,0 +1,1076 @@
+---
+title: "Self-restraint as mediator"
+date: "2026-04-06"
+author: "Shichange Yang"
+output: 
+  html_document:
+    code_folding: hide
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# 1. Cleaning
+
+```{r}
+df <- read.csv("lgbtPKU.csv")
+dim(df)
+```
+
+```{r}
+library(dplyr)
+library(tidyverse)
+
+# renaming for categorical and ordinals
+df <- df %>%
+  rename(nationality = Q4,
+         ethnicity = Q5,
+         department = Q6,
+         grade = Q7,
+         previous_residency = Q8,
+         sexual_orientation = Q12,
+         nonconformity_masculine = Q14,
+         nonconformity_feminine = Q15,
+         support_from_queer = Q25_行1,
+         support_from_nonqueer = Q25_行1,
+         )
+
+#manipulations
+df$age <- 33 - df$Q3
+df$self_restraint_teacher <- 5 - df$Q18
+df$documented_male <- 2 - df$Q9
+df$documented_female <- 1 - df$documented_male
+
+df$assigned_male <- ifelse(df$Q10 != 3, 2 - df$Q10, NA)
+df$assigned_female <- 1 - df$assigned_male
+
+df$cisgender <- 2 - df$Q11
+df$transgender <- 1 - df$cisgender
+
+library(fastDummies)
+df <- dummy_cols(df, select_columns = "sexual_orientation", remove_first_dummy = TRUE)
+
+df$singleness <- ifelse(df$Q13 == 1, 1, 0)
+
+df$gn <- ifelse(df$nonconformity_masculine == -3, 
+             df$nonconformity_feminine, df$nonconformity_masculine)
+
+df$outness <- 2 - df$Q16
+df$out_to_teacher <- ifelse(df$Q17 == 1, 1, 0)
+df$public_out = ifelse(df$Q21 == 1, 1, 0)
+df$out_to_queer_friends = ifelse(df$Q23 == -3, 1, df$Q23)
+df$out_to_nonqueer_friends = ifelse(df$Q24 == -3, 1, df$Q24)
+
+#LGBTQ+
+df$LGBTQ <- ifelse(df$Q10 != 3 & df$cisgender == 1 & df$sexual_orientation == 2, 0, 1)
+
+#perceived LGBTQ+-affirming attitude
+df$perceived_acceptance_teacher = 5 - df$Q19
+df$perceived_acceptance_student = 5 - df$Q28
+
+df$victimization_teacher <- 1 - df$Q20_选项17
+df$victimization_student <- 1 - df$Q29_选项14
+df$victimization_ever <- ifelse(df$victimization_teacher == 1 | df$victimization_student == 1, 1, 0)
+
+#Self-restraint of gender expression
+df$self_restraint_allstudent <- 10 - df$Q27_行1 - df$Q27_行2
+df$self_restraint_otherLGBTQ <- 5 - df$Q27_行1
+df$self_restraint_otherstudents <- 5 - df$Q27_行2
+df$self_restraint <- df$self_restraint_teacher + df$self_restraint_allstudent - 3
+
+# self-esteem: Rosenberg Self-Esteem Scale, RSES
+df <- df %>%
+  mutate(
+    Q31_行3_r  = 6 - Q31_行3,
+    Q31_行5_r  = 6 - Q31_行5,
+    Q31_行8_r  = 6 - Q31_行8,
+    Q31_行9_r  = 6 - Q31_行9,
+    Q31_行10_r = 6 - Q31_行10)
+
+df <- df %>%
+  mutate(
+    self_esteem = rowSums(
+      select(., all_of(c(
+        "Q31_行1", "Q31_行2", "Q31_行3_r", "Q31_行4", "Q31_行5_r",
+        "Q31_行6", "Q31_行7", "Q31_行8_r", "Q31_行9_r", "Q31_行10_r"
+      ))),
+      na.rm = TRUE
+    )
+  )
+
+# depression: Center for Epidemiologic Studies Depression Scale, CESD 9-item Chinese version
+df <- df %>%
+  mutate(
+    Q30_行5_r = 5 - Q30_行5,
+    Q30_行7_r = 5 - Q30_行7)
+
+df <- df %>%
+  mutate(
+    depression = Q30_行1 + Q30_行2 + Q30_行3 + Q30_行4 + 
+                 Q30_行5_r + Q30_行6 + Q30_行7_r + Q30_行8 + Q30_行9
+  )
+
+#anxiety: Generalized Anxiety Disorder Scale, GAD-7
+df <- df %>%
+  mutate(
+    anxiety = rowSums(select(., all_of(c("Q32_行1", "Q32_行2", "Q32_行3", "Q32_行4", "Q32_行5", "Q32_行6", "Q32_行7"))),
+                      na.rm = TRUE))
+```
+
+
+```{r}
+#check inconsistent cases
+#transgender
+df %>%
+  filter((documented_female == 1 & assigned_male == 1 & transgender == 0) | (documented_male == 1 & assigned_female == 1 & transgender == 0))
+
+#outness
+df %>%
+  filter((outness == 0 & out_to_teacher== 1) | (outness == 0 & public_out == 1))
+
+
+#outness in nonLGBTQ
+#SOGIE-based victimization among non-LGBTQ+
+df %>%
+  filter(LGBTQ == 0 & outness == 1)
+
+df %>%
+  filter(LGBTQ == 0 & out_to_teacher == 1)
+```
+
+```{r}
+#drop one inconsistent case
+df1 <- df %>%
+  filter(!((documented_female == 1 & assigned_male == 1 & transgender == 0) | (documented_male == 1 & assigned_female == 1 & transgender == 0)) %in% TRUE)
+dim(df1)
+```
+
+```{r}
+#drop two
+df1 <- df1 %>%
+  filter(!(LGBTQ == 0 & outness == 1))
+dim(df1)
+```
+
+```{r}
+#drop inconsistent case
+#constantly filling the same value for multiple question matrices
+df1 <- df1 %>%
+  filter(!(index == 1273))
+dim(df1)
+```
+
+```{r}
+#drop age under 18
+df1 <- df1 %>%
+  filter(!(age < 18))
+dim(df1)
+```
+
+# 2. Descriptives
+
+## 2.1. dem & exp
+```{r}
+df1 %>%
+  select(LGBTQ, documented_female, transgender, sexual_orientation, 
+         gn, outness, 
+         age, nationality, ethnicity, department, grade, previous_residency, 
+         victimization_teacher, victimization_student, victimization_ever ) %>%
+  summary
+```
+
+```{r}
+#value counts
+lapply(df1[,c('LGBTQ','sexual_orientation', 'gn', 'outness', 'out_to_queer_friends', 
+              'out_to_nonqueer_friends', 'out_to_teacher', 'public_out',
+             'nationality', 'age', 'victimization_teacher', 'victimization_student', 'victimization_ever')], table)
+```
+```{r}
+#output
+library(openxlsx)
+
+df1$age_group <- cut(df1$age,
+                     breaks = c(18, 20, 22, 24, 26, Inf),
+                     right = FALSE)
+
+descriptive_vars <- c('transgender','sexual_orientation', 'age_group' , 'documented_female')
+
+result <- lapply(descriptive_vars, function(v) {
+  as.data.frame(table(
+    Variable = rep(v, nrow(df1)),
+    Category = df1[[v]],
+    LGBTQ = df1$LGBTQ,
+    useNA = "ifany"
+  ))
+}) %>% bind_rows()
+
+result_prop <- result %>%
+  group_by(Variable, LGBTQ) %>%
+  mutate(
+    Percent = Freq / sum(Freq),
+    Percent_label = paste0(round(Percent * 100, 2), "%")
+  ) %>%
+  ungroup()
+
+write.xlsx(result_prop, "demographics.xlsx", overwrite = TRUE)
+```
+
+
+
+```{r}
+library(psych)
+describe(df1[, c("depression", "anxiety")])
+aggregate(depression ~ LGBTQ, data = df1, mean)
+aggregate(depression ~ LGBTQ, data = df1, sd)
+aggregate(anxiety ~ LGBTQ, data = df1, mean)
+aggregate(anxiety ~ LGBTQ, data = df1, sd)
+```
+
+## 2.2. s-restr
+
+```{r}
+#self-restraint
+table(df1$self_restraint_teacher)
+table(df1$self_restraint_otherLGBTQ)
+table(df1$self_restraint_otherstudents)
+
+table(df1$self_restraint_allstudent)
+table(df1$self_restraint)
+summary(df1$self_restraint)
+```
+
+```{r}
+library(psych)
+alpha_sr <- psych::alpha(df1[, c("self_restraint_teacher", "self_restraint_otherLGBTQ", "self_restraint_otherstudents")])
+print(alpha_sr)
+```
+
+```{r}
+#Cronbach's alpha
+psych::alpha(df1[c("self_restraint_teacher", "self_restraint_otherLGBTQ", "self_restraint_otherstudents")])
+#not valid for this formative construct
+```
+
+```{r}
+#correlation
+cor(df1[,c("self_restraint_teacher",
+           "self_restraint_otherLGBTQ",
+           "self_restraint_otherstudents")],
+    use="pairwise.complete.obs")
+```
+
+```{r}
+#review of self-restraint sum
+sr_varlist <- c("self_restraint_teacher", "self_restraint_otherstudents", "self_restraint_otherLGBTQ", "self_restraint")
+
+#restraint among LGBTQ+
+print("Among LGBTQ+")
+for (v in sr_varlist) {
+  cat(":\n")
+  df1 %>%
+    filter(LGBTQ == 1) %>%
+    count(.data[[v]]) %>%
+    mutate(percent = n / sum(n) * 100) %>%
+    print()
+  cat("\n")
+}
+
+#restraint among non-LGBTQ+
+print("Among non-LGBTQ+")
+for (v in sr_varlist) {
+  cat(":\n")
+  df1 %>%
+    filter(LGBTQ == 0) %>%
+    count(.data[[v]]) %>%
+    mutate(percent = n / sum(n) * 100) %>%
+    print()
+  cat("\n")
+}
+```
+```{r}
+describe(df1$self_restraint)
+```
+
+```{r}
+aggregate(self_restraint ~ LGBTQ, data = df1, mean)
+aggregate(self_restraint ~ LGBTQ, data = df1, sd)
+aggregate(gn ~ LGBTQ, data = df1, mean)
+aggregate(gn ~ LGBTQ, data = df1, sd)
+```
+
+
+
+## 2.3. victm
+```{r}
+lapply(df1[, paste0('Q20_选项',1:15)], table)
+lapply(df1[, paste0('Q29_选项', 1:12)], table)
+```
+
+```{r}
+#count
+df1$victim_teacher_count <- rowSums(df1[, paste0('Q20_选项', 1:15)])
+df1$victim_student_count <- rowSums(df1[, paste0('Q29_选项', 1:12)])
+df1$victimization_count <- df1$victim_teacher_count + df1$victim_student_count
+
+table(df1$victim_teacher_count)
+table(df1$victim_student_count)
+table(df1$victimization_count)
+```
+```{r}
+df1 %>% top_n(3, victim_teacher_count)
+df1 %>% top_n(3, victim_student_count)
+```
+
+```{r}
+#SOGIE-based victimization among non-LGBTQ+
+df1 %>%
+  filter(LGBTQ == 1) %>%
+  count(victimization_ever)
+
+df1 %>%
+  filter(LGBTQ == 0) %>%
+  count(victimization_ever)
+
+df1 %>%
+  filter((LGBTQ == 0 & victimization_ever == 1))
+```
+
+```{r}
+#Kuder-Richardson Formula 20 (KR-20)
+kr20_result1 <- psych::alpha((df1[paste0("Q20_选项", 1:15)]), check.keys = TRUE)
+print(kr20_result1)
+
+kr20_result2 <- psych::alpha((df1[paste0("Q29_选项", 1:12)]), check.keys = TRUE)
+print(kr20_result2)
+#not valid for this formative construct
+```
+
+
+```{r}
+#Victimization weighted sum score
+# microaggression *1; moderate violence & discrimination *2; severe violence *3
+df1$victm_teacher_sum <- 
+  1 * df1$Q20_选项1 + 1 * df1$Q20_选项3 + 1 * df1$Q20_选项4 +
+  2 * df1$Q20_选项2 + 2 * df1$Q20_选项6 + 2 * df1$Q20_选项7 + 2 * df1$Q20_选项8 +
+  2 * df1$Q20_选项9 + 2 * df1$Q20_选项10 + 2 * df1$Q20_选项11 + 2 * df1$Q20_选项12 + 2 * df1$Q20_选项15 +
+  3 * df1$Q20_选项5 + 3 * df1$Q20_选项13 + 3 * df1$Q20_选项14
+  
+df1$victm_student_sum <-
+  1 * df1$Q29_选项1 + 1 * df1$Q29_选项3 + 1 * df1$Q29_选项4 +
+  2 * df1$Q29_选项2 + 2 * df1$Q29_选项6 + 2 * df1$Q29_选项7 + 2 * df1$Q29_选项8 +
+  2 * df1$Q29_选项9 + 2 * df1$Q29_选项12 +
+  3 * df1$Q29_选项5 + 3 * df1$Q29_选项10 + 3 * df1$Q29_选项11
+
+df1$victimization_sum <- df1$victm_teacher_sum + df1$victm_student_sum
+
+table(df1$victm_teacher_sum)
+table(df1$victm_student_sum)
+table(df1$victimization_sum)
+
+df1 %>% slice_max(victm_teacher_sum, n = 10)
+df1 %>% slice_max(victm_student_sum, n = 10)
+df1 %>% slice_max(victimization_sum, n = 10)
+```
+
+```{r}
+describe(df1$victimization_sum)
+aggregate(victimization_sum ~ LGBTQ, data =df1, mean)
+aggregate(victimization_sum ~ LGBTQ, data =df1, sd)
+```
+
+
+## 2.4. outness
+```{r}
+#convert 1-5 to 0-1
+df1$out_to_teacher_norm <- df1$out_to_teacher
+df1$out_to_queer_friends_norm <- (df1$out_to_queer_friends - 1)/4  # 1-5 -> 0-1
+df1$out_to_nonqueer_friends_norm <- (df1$out_to_nonqueer_friends - 1)/4  # 1-5 -> 0-1
+
+table(df1$out_to_teacher_norm)
+table(df1$out_to_queer_friends_norm)
+table(df1$out_to_nonqueer_friends_norm)
+print("----------")
+print("binary outness:")
+table(df1$outness)
+print("outness-three score sum:")
+df1$outness_sum <- rowSums(df1[,c("out_to_teacher_norm","out_to_queer_friends_norm","out_to_nonqueer_friends_norm")])
+table(df1$outness_sum)
+summary(df1$outness_sum)
+```
+
+# 3. Associations
+```{r}
+keyvariables <- c("depression","anxiety", "LGBTQ", "documented_female", "age", 
+                  "victimization_sum", "gn", "outness_sum", "self_esteem", "self_restraint")
+
+res <- corr.test(df1[, keyvariables])
+r_mat <- res$r
+p_mat <- res$p
+
+get_stars <- function(p){
+  ifelse(p < .001, "***",
+  ifelse(p < .01,  "**",
+  ifelse(p < .05,  "*", "")))
+}
+
+corr_table <- matrix("", nrow = ncol(r_mat), ncol = ncol(r_mat))
+rownames(corr_table) <- colnames(r_mat)
+colnames(corr_table) <- colnames(r_mat)
+
+for(i in 1:ncol(r_mat)){
+  for(j in 1:ncol(r_mat)){
+    
+    if(i <= j){
+      corr_table[i, j] <- ""
+    } else {
+      r <- round(r_mat[i, j], 2)
+      p <- p_mat[i, j]
+      stars <- get_stars(p)
+      corr_table[i, j] <- paste0(r, stars)
+    }
+  }
+}
+
+write.xlsx(corr_table, "correlation.xlsx", overwrite = TRUE)
+```
+
+```{r}
+res <- psych::corr.test(df1[, keyvariables])
+res$r
+res$p
+```
+
+
+```{r}
+corr_res <- corr.test(df1[, keyvariables])
+corr_matrix <- corr_res$r
+p_matrix <- corr_res$p
+
+library(corrplot)
+
+corrplot(corr_matrix, 
+         method = "circle", 
+         type = "lower",
+         p.mat = p_matrix, 
+         sig.level = 0.05, 
+         insig = "pch") 
+```
+```{r}
+MaxMinMeanSD <- df1 %>%
+  select(all_of(keyvariables)) %>%
+  summarise(across(everything(),
+                   list(
+                     Min  = ~min(., na.rm = TRUE),
+                     Max  = ~max(., na.rm = TRUE),
+                     Mean = ~mean(., na.rm = TRUE),
+                     SD   = ~sd(., na.rm = TRUE)
+                   ))) %>%
+  pivot_longer(cols = everything(),
+               names_to = c("Variable", ".value"),
+               names_pattern = "(.+)_(Min|Max|Mean|SD)")
+write.xlsx(MaxMinMeanSD, "MaxMinMeanSD.xlsx", overwrite = TRUE)
+```
+
+```{r}
+#table1 part2
+library(gtsummary)
+df1 %>%
+  select(LGBTQ, age, gn, self_restraint, victimization_sum, depression, anxiety) %>%
+  tbl_summary(
+    by = LGBTQ,
+    type = gn ~ "continuous",
+    statistic = all_continuous() ~ "{mean} ({sd})",
+    digits = all_continuous() ~ 2,
+    missing = "no"
+  )
+```
+
+
+
+# 4. S1 LGBTQ Identity
+```{r}
+#simple linear regression: Mental health ~ LGBTQ+ identity
+s1s1_dep_model <- lm(depression ~ LGBTQ, data = df1)
+summary(s1s1_dep_model)
+
+s1s1_anx_model <- lm(anxiety ~ LGBTQ, data = df1)
+summary(s1s1_anx_model)
+```
+
+<!-- ## 4.1. S1 dep -->
+```{r}
+library('lavaan')
+# SEM: Identity -> victimization + self-restrain -> depression
+s1_dep_model <- '
+  # outcome
+  depression ~ a*LGBTQ + b*victimization_sum + c*self_restraint + f1*documented_female
+  
+  # mediation paths
+  victimization_sum ~ d*LGBTQ + f2*documented_female
+  self_restraint ~ e*LGBTQ + f3*documented_female
+
+  # self-esteem
+  self_esteem ~~ victimization_sum
+  self_esteem ~~ self_restraint
+  self_esteem ~~ depression
+  self_esteem ~~ LGBTQ
+  gn ~~ self_restraint
+  gn ~~ victimization_sum
+
+  # indirect effects
+  indirect_victimization := b*d
+  indirect_selfrestraint := e*c
+  total_indirect := indirect_victimization + indirect_selfrestraint
+
+  # total effect
+  total_effect := a + total_indirect
+'
+
+s1_dep_fit <- sem(s1_dep_model, data=df1, estimator="ML", se="bootstrap" , bootstrap=1000)
+summary(s1_dep_fit, standardized=TRUE, fit.measures=TRUE)
+```
+
+## 4.2. S1 anx
+```{r}
+# SEM: Identity -> victimization + self-restrain -> anxiety
+s1_anx_model <- '
+  # outcome
+  anxiety ~ a*LGBTQ + b*victimization_sum + c*self_restraint + f1*documented_female
+  
+  # mediation paths
+  victimization_sum ~ d*LGBTQ + f2*documented_female
+  self_restraint ~ e*LGBTQ + f3*documented_female
+
+  # self-esteem
+  self_esteem ~~ victimization_sum
+  self_esteem ~~ self_restraint
+  self_esteem ~~ anxiety
+  self_esteem ~~ LGBTQ
+  gn ~~ self_restraint
+  gn ~~ victimization_sum
+
+  # indirect effects
+  indirect_victimization := b*d
+  indirect_selfrestraint := e*c
+  total_indirect := indirect_victimization + indirect_selfrestraint
+
+  # total effect
+  total_effect := a + total_indirect
+'
+
+s1_anx_fit <- sem(s1_anx_model, data=df1, estimator="ML", se="bootstrap" , bootstrap=1000)
+summary(s1_anx_fit, standardized=TRUE, fit.measures=TRUE)
+
+```
+
+# 6. S2 GN
+```{r}
+#simple linear regression: Mental health ~ Gender nonconformity
+s2s1_dep_model <- lm(depression ~ gn, data = df1)
+summary(s2s1_dep_model)
+
+s2s1_anx_model <- lm(anxiety ~ gn, data = df1)
+summary(s2s1_anx_model)
+```
+
+## 6.1. S2 dep
+
+```{r}
+# SEM: Gender nonconformity -> victimization + self-restrain -> depression
+s2_dep_model <- '
+  # outcome
+  depression ~ a*gn + b*victimization_sum + c*self_restraint + f1*documented_female
+  
+  # mediation paths
+  victimization_sum ~ d*gn + f2*documented_female
+  self_restraint ~ e*gn + f3*documented_female
+
+  # accounting for:
+  self_esteem ~~ victimization_sum
+  self_esteem ~~ self_restraint
+  self_esteem ~~ depression
+  self_esteem ~~ gn
+  self_esteem ~~ LGBTQ
+  self_esteem ~~ outness_sum
+  outness_sum ~~ depression
+  outness_sum ~~ self_restraint
+  outness_sum ~~ victimization_sum
+  outness_sum ~~ gn
+  outness_sum ~ LGBTQ
+  LGBTQ ~~ self_restraint
+  LGBTQ ~~ victimization_sum
+  LGBTQ ~~ gn
+  LGBTQ ~~ depression
+  gn ~ documented_female
+  
+  # indirect effects
+  indirect_victimization := b*d
+  indirect_selfrestraint := e*c
+  total_indirect := indirect_victimization + indirect_selfrestraint
+
+  # total effect
+  total_effect := a + total_indirect
+'
+
+s2_dep_fit <- sem(s2_dep_model, data=df1, estimator="ML", se="bootstrap" , bootstrap=1000)
+summary(s2_dep_fit, standardized=TRUE, fit.measures=TRUE)
+```
+
+## 6.1.1 moderated by LGBTQ
+```{r}
+#with LGBTQ as moderator
+df1$interaction_gn_LGBTQ <- df1$gn * df1$LGBTQ
+df1$interaction_selfrest_LGBTQ <- df1$self_restraint * df1$LGBTQ
+
+# SEM: Gender nonconformity -> victimization + self-restrain -> depression
+s2_dep_model_moderated <- '
+  # outcome
+  depression ~ a*gn + b*victimization_sum + c*self_restraint + h*interaction_selfrest_LGBTQ + f1*documented_female
+  
+  # mediation paths
+  victimization_sum ~ d*gn + f2*documented_female
+  self_restraint ~ e*gn + g*interaction_gn_LGBTQ + f3*documented_female
+
+  # accounting for:
+  self_esteem ~~ victimization_sum
+  self_esteem ~~ self_restraint
+  self_esteem ~~ depression
+  self_esteem ~~ gn
+  self_esteem ~~ LGBTQ
+  self_esteem ~~ outness_sum
+  outness_sum ~~ depression
+  outness_sum ~~ self_restraint
+  outness_sum ~~ victimization_sum
+  outness_sum ~~ gn
+  outness_sum ~ LGBTQ
+  LGBTQ ~~ self_restraint
+  LGBTQ ~~ victimization_sum
+  LGBTQ ~~ gn
+  LGBTQ ~~ depression
+  gn ~ documented_female
+  
+  # indirect effects
+  indirect_sr_LGBTQ0 := e * c
+  indirect_sr_LGBTQ1 := (e + g) * (c + h)
+  indirect_victimization := b*d
+  total_indirect_LGBTQ0 := indirect_victimization + indirect_sr_LGBTQ0
+  total_indirect_LGBTQ1 := indirect_victimization + indirect_sr_LGBTQ1
+
+  # total effect
+  total_effect_LGBTQ0 := a + total_indirect_LGBTQ0
+  total_effect_LGBTQ1 := a + total_indirect_LGBTQ1
+'
+
+s2_dep_fit_moderated <- sem(s2_dep_model_moderated, data=df1, estimator="ML", se="bootstrap" , bootstrap=1000)
+summary(s2_dep_fit_moderated, standardized=TRUE, fit.measures=TRUE)
+```
+
+## 6.2. S2 anx
+```{r}
+# SEM: Gender nonconformity -> victimization + self-restrain -> anxiety
+s2_anx_model <- '
+  # outcome
+  anxiety ~ a*gn + b*victimization_sum + c*self_restraint + f1*documented_female
+  
+  # mediation paths
+  victimization_sum ~ d*gn + f2*documented_female
+  self_restraint ~ e*gn + f3*documented_female
+
+  # accounting for:
+  self_esteem ~~ victimization_sum
+  self_esteem ~~ self_restraint
+  self_esteem ~~ anxiety
+  self_esteem ~~ gn
+  self_esteem ~~ LGBTQ
+  self_esteem ~~ outness
+  outness ~~ anxiety
+  outness ~~ self_restraint
+  outness ~~ victimization_sum
+  outness ~~ gn
+  outness ~ LGBTQ
+  LGBTQ ~~ self_restraint
+  LGBTQ ~~ victimization_sum
+  LGBTQ ~~ gn
+  LGBTQ ~~ anxiety
+  gn ~ documented_female
+
+  # indirect effects
+  indirect_victimization := b*d
+  indirect_selfrestraint := e*c
+  total_indirect := indirect_victimization + indirect_selfrestraint
+
+  # total effect
+  total_effect := a + total_indirect
+'
+
+s2_anx_fit <- sem(s2_anx_model, data=df1, estimator="ML", se="bootstrap" , bootstrap=1000)
+summary(s2_anx_fit, standardized=TRUE, fit.measures=TRUE)
+```
+
+## 6.2.1 moderated by LGBTQ
+```{r}
+#with LGBTQ as moderator
+# SEM: Gender nonconformity -> victimization + self-restrain -> anxiety
+s2_anx_model_moderated <- '
+  # outcome
+  anxiety ~ a*gn + b*victimization_sum + c*self_restraint + h*interaction_selfrest_LGBTQ + f1*documented_female
+  
+  # mediation paths
+  victimization_sum ~ d*gn + f2*documented_female
+  self_restraint ~ e*gn + g*interaction_gn_LGBTQ + f3*documented_female
+
+  # accounting for:
+  self_esteem ~~ victimization_sum
+  self_esteem ~~ self_restraint
+  self_esteem ~~ anxiety
+  self_esteem ~~ gn
+  self_esteem ~~ LGBTQ
+  self_esteem ~~ outness_sum
+  outness_sum ~~ anxiety
+  outness_sum ~~ self_restraint
+  outness_sum ~~ victimization_sum
+  outness_sum ~~ gn
+  outness_sum ~ LGBTQ
+  LGBTQ ~~ self_restraint
+  LGBTQ ~~ victimization_sum
+  LGBTQ ~~ gn
+  LGBTQ ~~ anxiety
+  gn ~ documented_female
+  
+  # indirect effects
+  indirect_sr_LGBTQ0 := e * c
+  indirect_sr_LGBTQ1 := (e + g) * (c + h)
+  indirect_victimization := b*d
+  total_indirect_LGBTQ0 := indirect_victimization + indirect_sr_LGBTQ0
+  total_indirect_LGBTQ1 := indirect_victimization + indirect_sr_LGBTQ1
+
+  # total effect
+  total_effect_LGBTQ0 := a + total_indirect_LGBTQ0
+  total_effect_LGBTQ1 := a + total_indirect_LGBTQ1
+'
+
+s2_anx_fit_moderated <- sem(s2_anx_model_moderated, data=df1, estimator="ML", se="bootstrap" , bootstrap=1000)
+summary(s2_anx_fit_moderated, standardized=TRUE, fit.measures=TRUE)
+```
+
+# 7. robustness
+```{r}
+#interaction terms
+df1$interaction_se_gn <- df1$gn * df1$self_esteem
+df1$interaction_se_sr <- df1$self_esteem * df1$self_restraint
+df1$interaction_se_victimization <- df1$self_esteem * df1$victimization_sum
+```
+
+## 7.1 Rob dep
+```{r}
+#dep
+s3_dep_model <- '
+  # outcome
+  depression ~ a*gn + b*victimization_sum + c*self_restraint + f1*documented_female + e1*interaction_se_sr + e2*interaction_se_victimization + self_esteem
+  
+  # moderated mediation paths
+  victimization_sum ~ d*gn + f2*documented_female + e3*interaction_se_gn + self_esteem
+  self_restraint ~ e*gn + f3*documented_female  + e4*interaction_se_gn + self_esteem
+
+  # accounting for:
+  self_esteem ~~ LGBTQ
+  self_esteem ~~ outness
+  outness ~~ depression
+  outness ~~ self_restraint
+  outness ~~ victimization_sum
+  outness ~~ gn
+  outness ~ LGBTQ
+  LGBTQ ~~ self_restraint
+  LGBTQ ~~ victimization_sum
+  LGBTQ ~~ gn
+  LGBTQ ~~ depression
+  
+  # indirect effects
+  indirect_vic_low := (d + e3*(-1)) * (b + e2*(-1))
+  indirect_vic_mean := (d + e3*(0)) * (b + e2*(0))
+  indirect_vic_high := (d + e3*(1)) * (b + e2*(1))
+  
+  indirect_sr_low := (e + e4*(-1)) * (c + e1*(-1))
+  indirect_sr_mean := (e + e4*(0)) * (c + e1*(0))
+  indirect_sr_high := (e + e4*(1)) * (c + e1*(1))
+'
+
+s3_dep_fit <- sem(s3_dep_model, data=df1, estimator="ML", se="bootstrap" , bootstrap=1000)
+summary(s3_dep_fit, standardized=TRUE, fit.measures=TRUE)
+
+```
+
+## 7.2 Rob anx
+```{r}
+#anx
+s3_anx_model <- '
+  # outcome
+  anxiety ~ a*gn + b*victimization_sum + c*self_restraint + f1*documented_female + e1*interaction_se_sr + e2*interaction_se_victimization + self_esteem
+  
+  # moderated mediation paths
+  victimization_sum ~ d*gn + f2*documented_female + e3*interaction_se_gn + self_esteem
+  self_restraint ~ e*gn + f3*documented_female  + e4*interaction_se_gn + self_esteem
+
+  # accounting for:
+  self_esteem ~~ LGBTQ
+  self_esteem ~~ outness
+  outness ~~ anxiety
+  outness ~~ self_restraint
+  outness ~~ victimization_sum
+  outness ~~ gn
+  outness ~ LGBTQ
+  LGBTQ ~~ self_restraint
+  LGBTQ ~~ victimization_sum
+  LGBTQ ~~ gn
+  LGBTQ ~~ anxiety
+  
+  # indirect effects
+  indirect_vic_low := (d + e3*(-1)) * (b + e2*(-1))
+  indirect_vic_mean := (d + e3*(0)) * (b + e2*(0))
+  indirect_vic_high := (d + e3*(1)) * (b + e2*(1))
+  
+  indirect_sr_low := (e + e4*(-1)) * (c + e1*(-1))
+  indirect_sr_mean := (e + e4*(0)) * (c + e1*(0))
+  indirect_sr_high := (e + e4*(1)) * (c + e1*(1))
+'
+
+s3_anx_fit <- sem(s3_anx_model, data=df1, estimator="ML", se="bootstrap" , bootstrap=1000)
+summary(s3_anx_fit, standardized=TRUE, fit.measures=TRUE)
+
+```
+
+# 8. sensitivity
+
+## 8.1. victim count
+```{r}
+#substitution: victimization_count
+s4_dep_model <- '
+  # outcome
+  depression ~ a*gn + b*victimization_count + c*self_restraint + f1*documented_female
+  
+  # mediation paths
+  victimization_count ~ d*gn + f2*documented_female
+  self_restraint ~ e*gn + f3*documented_female
+
+  # accounting for:
+  self_esteem ~~ victimization_count
+  self_esteem ~~ self_restraint
+  self_esteem ~~ depression
+  self_esteem ~~ gn
+  self_esteem ~~ LGBTQ
+  self_esteem ~~ outness
+  outness ~~ depression
+  outness ~~ self_restraint
+  outness ~~ victimization_count
+  outness ~~ gn
+  outness ~ LGBTQ
+  LGBTQ ~~ self_restraint
+  LGBTQ ~~ victimization_count
+  LGBTQ ~~ gn
+  LGBTQ ~~ depression
+  
+  # indirect effects
+  indirect_victimization := b*d
+  indirect_selfrestraint := e*c
+  total_indirect := indirect_victimization + indirect_selfrestraint
+
+  # total effect
+  total_effect := a + total_indirect
+'
+
+s4_dep_fit <- sem(s4_dep_model, data=df1, estimator="ML", se="bootstrap" , bootstrap=1000)
+summary(s4_dep_fit, standardized=TRUE, fit.measures=TRUE)
+```
+```{r}
+s4_anx_model <- '
+  # outcome
+  anxiety ~ a*gn + b*victimization_count + c*self_restraint + f1*documented_female
+  
+  # mediation paths
+  victimization_count ~ d*gn + f2*documented_female
+  self_restraint ~ e*gn + f3*documented_female
+
+  # accounting for:
+  self_esteem ~~ victimization_count
+  self_esteem ~~ self_restraint
+  self_esteem ~~ anxiety
+  self_esteem ~~ gn
+  self_esteem ~~ LGBTQ
+  self_esteem ~~ outness
+  outness ~~ anxiety
+  outness ~~ self_restraint
+  outness ~~ victimization_count
+  outness ~~ gn
+  outness ~ LGBTQ
+  LGBTQ ~~ self_restraint
+  LGBTQ ~~ victimization_count
+  LGBTQ ~~ gn
+  LGBTQ ~~ anxiety
+
+  # indirect effects
+  indirect_victimization := b*d
+  indirect_selfrestraint := e*c
+  total_indirect := indirect_victimization + indirect_selfrestraint
+
+  # total effect
+  total_effect := a + total_indirect
+'
+
+s4_anx_fit <- sem(s4_anx_model, data=df1, estimator="ML", se="bootstrap" , bootstrap=1000)
+summary(s4_anx_fit, standardized=TRUE, fit.measures=TRUE)
+```
+
+## 8.2. victim ever
+```{r}
+#substitution: victimization_ever
+s5_dep_model <- '
+  # outcome
+  depression ~ a*gn + b*victimization_ever + c*self_restraint + f1*documented_female
+  
+  # mediation paths
+  victimization_ever ~ d*gn + f2*documented_female
+  self_restraint ~ e*gn + f3*documented_female
+
+  # accounting for:
+  self_esteem ~~ victimization_ever
+  self_esteem ~~ self_restraint
+  self_esteem ~~ depression
+  self_esteem ~~ gn
+  self_esteem ~~ LGBTQ
+  self_esteem ~~ outness
+  outness ~~ depression
+  outness ~~ self_restraint
+  outness ~~ victimization_ever
+  outness ~~ gn
+  outness ~ LGBTQ
+  LGBTQ ~~ self_restraint
+  LGBTQ ~~ victimization_ever
+  LGBTQ ~~ gn
+  LGBTQ ~~ depression
+  
+  # indirect effects
+  indirect_victimization := b*d
+  indirect_selfrestraint := e*c
+  total_indirect := indirect_victimization + indirect_selfrestraint
+
+  # total effect
+  total_effect := a + total_indirect
+'
+
+s5_dep_fit <- sem(s5_dep_model, data=df1, estimator="ML", se="bootstrap" , bootstrap=1000)
+summary(s5_dep_fit, standardized=TRUE, fit.measures=TRUE)
+```
+
+```{r}
+s5_anx_model <- '
+  # outcome
+  anxiety ~ a*gn + b*victimization_ever + c*self_restraint + f1*documented_female
+  
+  # mediation paths
+  victimization_ever ~ d*gn + f2*documented_female
+  self_restraint ~ e*gn + f3*documented_female
+
+  # accounting for:
+  self_esteem ~~ victimization_ever
+  self_esteem ~~ self_restraint
+  self_esteem ~~ anxiety
+  self_esteem ~~ gn
+  self_esteem ~~ LGBTQ
+  self_esteem ~~ outness
+  outness ~~ anxiety
+  outness ~~ self_restraint
+  outness ~~ victimization_ever
+  outness ~~ gn
+  outness ~ LGBTQ
+  LGBTQ ~~ self_restraint
+  LGBTQ ~~ victimization_ever
+  LGBTQ ~~ gn
+  LGBTQ ~~ anxiety
+
+  # indirect effects
+  indirect_victimization := b*d
+  indirect_selfrestraint := e*c
+  total_indirect := indirect_victimization + indirect_selfrestraint
+
+  # total effect
+  total_effect := a + total_indirect
+'
+
+s5_anx_fit <- sem(s5_anx_model, data=df1, estimator="ML", se="bootstrap" , bootstrap=1000)
+summary(s5_anx_fit, standardized=TRUE, fit.measures=TRUE)
+```
+
+## 8.3. binary outness
+```{r}
+s6_dep_model <- '
+  # outcome
+  depression ~ a*gn + b*victimization_sum + c*self_restraint + f1*documented_female
+  
+  # mediation paths
+  victimization_sum ~ d*gn + f2*documented_female
+  self_restraint ~ e*gn + f3*documented_female
+
+  # accounting for:
+  self_esteem ~~ victimization_sum
+  self_esteem ~~ self_restraint
+  self_esteem ~~ depression
+  self_esteem ~~ gn
+  self_esteem ~~ LGBTQ
+  self_esteem ~~ outness
+  outness ~~ depression
+  outness ~~ self_restraint
+  outness ~~ victimization_sum
+  outness ~~ gn
+  outness ~ LGBTQ
+  LGBTQ ~~ self_restraint
+  LGBTQ ~~ victimization_sum
+  LGBTQ ~~ gn
+  LGBTQ ~~ depression
+  
+  # indirect effects
+  indirect_victimization := b*d
+  indirect_selfrestraint := e*c
+  total_indirect := indirect_victimization + indirect_selfrestraint
+
+  # total effect
+  total_effect := a + total_indirect
+'
+
+s6_dep_fit <- sem(s6_dep_model, data=df1, estimator="ML", se="bootstrap" , bootstrap=1000)
+summary(s6_dep_fit, standardized=TRUE, fit.measures=TRUE)
+```
+
+```{r}
+s6_anx_model <- '
+  # outcome
+  anxiety ~ a*LGBTQ + b*victimization_sum + c*self_restraint + f1*documented_female
+  
+  # mediation paths
+  victimization_sum ~ d*LGBTQ + f2*documented_female
+  self_restraint ~ e*LGBTQ + f3*documented_female
+  
+  #moderation
+  anxiety ~~ victimization_sum*self_esteem
+  anxiety ~~ self_restraint*self_esteem
+
+  # self-esteem
+  self_esteem ~~ victimization_sum
+  self_esteem ~~ self_restraint
+  self_esteem ~~ anxiety
+  self_esteem ~~ LGBTQ
+  gn ~~ self_restraint
+  gn ~~ victimization_sum
+
+  # indirect effects
+  indirect_victimization := b*d
+  indirect_selfrestraint := e*c
+  total_indirect := indirect_victimization + indirect_selfrestraint
+
+  # total effect
+  total_effect := a + total_indirect
+'
+
+s6_anx_fit <- sem(s6_anx_model, data=df1, estimator="ML", se="bootstrap" , bootstrap=1000)
+summary(s6_anx_fit, standardized=TRUE, fit.measures=TRUE)
+```
