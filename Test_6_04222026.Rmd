@@ -8,6 +8,7 @@ output:
 ---
 
 ```{r setup, include=FALSE}
+library(tidyverse)
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
@@ -116,6 +117,8 @@ df <- df %>%
   mutate(
     anxiety = rowSums(select(., all_of(c("Q32_行1", "Q32_行2", "Q32_行3", "Q32_行4", "Q32_行5", "Q32_行6", "Q32_行7"))),
                       na.rm = TRUE))
+df <- df |>
+  mutate(counseling_service = 2 - Q35)
 ```
 
 
@@ -186,6 +189,7 @@ lapply(df1[,c('LGBTQ','sexual_orientation', 'gn', 'outness', 'out_to_queer_frien
               'out_to_nonqueer_friends', 'out_to_teacher', 'public_out',
              'nationality', 'age', 'victimization_teacher', 'victimization_student', 'victimization_ever')], table)
 ```
+
 ```{r}
 #output
 library(openxlsx)
@@ -400,6 +404,8 @@ summary(df1$outness_sum)
 ```
 
 # 3. Associations
+
+## Original
 ```{r}
 keyvariables <- c("depression","anxiety", "LGBTQ", "documented_female", "age", 
                   "victimization_sum", "gn", "outness_sum", "self_esteem", "self_restraint")
@@ -433,6 +439,64 @@ for(i in 1:ncol(r_mat)){
 }
 
 write.xlsx(corr_table, "correlation.xlsx", overwrite = TRUE)
+```
+
+
+## New? 
+```{r}
+keyvariables1 <- c("depression","anxiety", "self_esteem", 
+                   "victimization_sum", "gn", "outness_sum", "self_restraint",
+                   "LGBTQ", "documented_female",
+                   "age", "singleness", "counseling_service")
+
+cont_var = c("depression","anxiety", "self_esteem", "victimization_sum", "gn", "outness_sum", "self_restraint", "age")
+bin_var = c("LGBTQ", "documented_female", "singleness", "counseling_service")
+
+res <- corr.test(df1[, keyvariables1])
+res$r |> knitr::kable()
+p_mat <- res$p
+
+res <- mixedCor(
+  df1[, c(cont_var, bin_var)],
+  c = cont_var,
+  p = bin_var
+)
+
+res$rho |> knitr::kable()
+
+library(ggplot2)
+
+df1 |>
+  ggplot() +
+  geom_histogram(aes(x = age, fill = as.factor(singleness)), position = "dodge")
+
+df1 |>
+  ggplot() +
+  geom_histogram(aes(x = age, fill = as.factor(singleness)), position = "dodge")
+
+get_stars <- function(p){
+  ifelse(p < .001, "***",
+  ifelse(p < .01,  "**",
+  ifelse(p < .05,  "*", "")))
+}
+
+corr_table <- matrix("", nrow = ncol(r_mat), ncol = ncol(r_mat))
+rownames(corr_table) <- colnames(r_mat)
+colnames(corr_table) <- colnames(r_mat)
+
+for(i in 1:ncol(r_mat)){
+  for(j in 1:ncol(r_mat)){
+    
+    if(i <= j){
+      corr_table[i, j] <- ""
+    } else {
+      r <- round(r_mat[i, j], 2)
+      p <- p_mat[i, j]
+      stars <- get_stars(p)
+      corr_table[i, j] <- paste0(r, stars)
+    }
+  }
+}
 ```
 
 ```{r}
@@ -486,7 +550,47 @@ df1 %>%
   )
 ```
 
+## 3.1 Linear Regression
 
+### All
+
+```{r}
+
+df_slm1 = df1 |>
+  filter(LGBTQ == 1) |>
+  select(gn, self_restraint, depression, victimization_sum, documented_female, self_esteem, singleness, outness_sum)
+
+model = lm(depression ~., data = df_slm1)
+summary(model)
+```
+
+```{r}
+
+df_slm1 = df1 |>
+  select(LGBTQ, gn, self_restraint, depression, victimization_sum, documented_female, self_esteem, singleness, outness_sum) |>
+  mutate(
+    lgbtq.self_r = self_restraint*LGBTQ,
+    lgbtq.outness = LGBTQ * outness_sum
+  )
+
+model = lm(depression ~., data = df_slm1)
+summary(model)
+```
+
+```{r}
+df_all = df1 |>
+  select(any_of(keyvariables1), LGBTQ) |>
+  select(-anxiety, -counseling_service) |>
+  mutate(
+    self_r.doc_f = self_restraint * documented_female,
+    self_r.LGBTQ = self_restraint * LGBTQ,
+    gn.LGBTQ = gn * LGBTQ,
+    victimizaion.LGBTQ = victimization_sum * LGBTQ
+  )
+
+model = lm(depression ~., data = df_all)
+summary(model)
+```
 
 # 4. S1 LGBTQ Identity
 ```{r}
@@ -498,7 +602,7 @@ s1s1_anx_model <- lm(anxiety ~ LGBTQ, data = df1)
 summary(s1s1_anx_model)
 ```
 
-<!-- ## 4.1. S1 dep -->
+## 4.1. S1 dep
 ```{r}
 library('lavaan')
 # SEM: Identity -> victimization + self-restrain -> depression
@@ -517,6 +621,7 @@ s1_dep_model <- '
   self_esteem ~~ LGBTQ
   gn ~~ self_restraint
   gn ~~ victimization_sum
+  gn ~~ LGBTQ
 
   # indirect effects
   indirect_victimization := b*d
@@ -529,6 +634,76 @@ s1_dep_model <- '
 
 s1_dep_fit <- sem(s1_dep_model, data=df1, estimator="ML", se="bootstrap" , bootstrap=1000)
 summary(s1_dep_fit, standardized=TRUE, fit.measures=TRUE)
+```
+
+## 4.1.1 S1 dep - singleness added
+
+```{r}
+library('lavaan')
+# SEM: Identity -> victimization + self-restrain -> depression
+s1.1_dep_model <- '
+  # outcome
+  depression ~ a*LGBTQ + b*victimization_sum + c*self_restraint + f1*documented_female
+  
+  # mediation paths
+  victimization_sum ~ d*LGBTQ + f2*documented_female
+  self_restraint ~ e*LGBTQ + f3*documented_female
+
+  # self-esteem
+  self_esteem ~~ victimization_sum
+  self_esteem ~~ self_restraint
+  self_esteem ~~ depression
+  self_esteem ~~ LGBTQ
+  gn ~~ self_restraint
+  gn ~~ victimization_sum
+  gn ~~ LGBTQ
+  depression ~~ singleness
+
+  # indirect effects
+  indirect_victimization := b*d
+  indirect_selfrestraint := e*c
+  total_indirect := indirect_victimization + indirect_selfrestraint
+
+  # total effect
+  total_effect := a + total_indirect
+'
+
+s1.1_dep_fit <- sem(s1.1_dep_model, data=df1, estimator="ML", se="bootstrap" , bootstrap=1000)
+summary(s1.1_dep_fit, standardized=TRUE, fit.measures=TRUE)
+```
+##4.1.1 + age
+```{r}
+library('lavaan')
+# SEM: Identity -> victimization + self-restrain -> depression
+s1.1_dep_model <- '
+  # outcome
+  depression ~ a*LGBTQ + b*victimization_sum + c*self_restraint + f1*documented_female + age
+  
+  # mediation paths
+  victimization_sum ~ d*LGBTQ + f2*documented_female + age
+  self_restraint ~ e*LGBTQ + f3*documented_female
+
+  # self-esteem
+  self_esteem ~~ victimization_sum
+  self_esteem ~~ self_restraint
+  self_esteem ~~ depression
+  self_esteem ~~ LGBTQ
+  gn ~~ self_restraint
+  gn ~~ victimization_sum
+  gn ~~ LGBTQ
+  depression ~~ singleness
+
+  # indirect effects
+  indirect_victimization := b*d
+  indirect_selfrestraint := e*c
+  total_indirect := indirect_victimization + indirect_selfrestraint
+
+  # total effect
+  total_effect := a + total_indirect
+'
+
+s1.1_dep_fit <- sem(s1.1_dep_model, data=df1, estimator="ML", se="bootstrap" , bootstrap=1000)
+summary(s1.1_dep_fit, standardized=TRUE, fit.measures=TRUE)
 ```
 
 ## 4.2. S1 anx
@@ -1074,3 +1249,10 @@ s6_anx_model <- '
 s6_anx_fit <- sem(s6_anx_model, data=df1, estimator="ML", se="bootstrap" , bootstrap=1000)
 summary(s6_anx_fit, standardized=TRUE, fit.measures=TRUE)
 ```
+
+
+# Next time
+
+1. linear regression. 实在不行就是那个
+
+2. introduction到method 只有 study 1 的逻辑 
