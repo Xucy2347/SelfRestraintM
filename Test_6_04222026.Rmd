@@ -1,7 +1,7 @@
 ---
 title: "Self-restraint as mediator"
 date: "2026-04-06"
-author: "Shichange Yang"
+author: "Shichang Yang"
 output: 
   html_document:
     code_folding: hide
@@ -170,6 +170,7 @@ df1 <- df1 %>%
   filter(!(age < 18))
 dim(df1)
 ```
+
 
 # 2. Descriptives
 
@@ -501,8 +502,8 @@ for(i in 1:ncol(r_mat)){
 
 ```{r}
 res <- psych::corr.test(df1[, keyvariables])
-res$r
-res$p
+res$r |> knitr::kable()
+res$p |> knitr::kable()
 ```
 
 

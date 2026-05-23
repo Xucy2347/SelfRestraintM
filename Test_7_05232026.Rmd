@@ -1,0 +1,366 @@
+---
+title: "Self Restraint and Depression"
+author: "Chuyuan XU"
+date: "2026-05-23"
+output: 
+  html_document:
+    code_folding: hide
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(psych)
+library(ggplot2)
+library(corrplot)
+library(gt)
+library(gtsummary)
+library(flextable)
+library(lavaan)
+
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# 1. Cleaning
+
+```{r}
+df_r = read.csv("lgbtPKU.csv")
+```
+
+The original dataframe has `r dim(df_r)[1]` observations and `r dim(df_r)[2]` columns.
+
+
+```{r}
+# renaming for categorical and ordinals
+df = df_r |>
+  rename(nationality = Q4,
+         ethnicity = Q5,
+         department = Q6,
+         grade = Q7,
+         previous_residency = Q8,
+         sexual_orientation = Q12,
+         nonconformity_masculine = Q14,
+         nonconformity_feminine = Q15,
+         support_from_queer = Q25_行1,
+         support_from_nonqueer = Q25_行1,
+         ) |>
+  
+    # manipulation
+  mutate(
+    
+    age = 33 - Q3,
+    
+    # sex and gender
+    self_restraint_teacher = 5 - Q18,
+    
+    documented_male = 2 - Q9,
+    documented_female = 1 - documented_male,
+
+    assigned_male = ifelse(Q10 != 3, 2 - Q10, NA),
+    assigned_female = 1 - assigned_male,
+
+    cisgender = 2 - Q11,
+    transgender = 1 - cisgender,
+    
+      # LGBTQ+
+    LGBTQ = ifelse(Q10 != 3 & cisgender == 1 & sexual_orientation == 2, 0, 1),
+    
+    sexual_orientation = factor(
+      sexual_orientation,
+      levels = c(1:5),
+      labels = c("Homosexual", "Heterosexual", "Bisexual/Pansexual", "Asexual/Asexual Spectrum", "Other (including uncertain)")
+    ),
+        
+    singleness = ifelse(Q13 == 1, 1, 0),
+    
+    gn = ifelse(nonconformity_masculine == -3, nonconformity_feminine, nonconformity_masculine),
+    
+    counseling_service = 2 - Q35,
+    
+    #Victimization weighted sum score
+    # microaggression *1; moderate violence & discrimination *2; severe violence *3
+    victm_teacher_sum = 
+      1 * Q20_选项1 + 1 * Q20_选项3 + 1 * Q20_选项4 +
+      2 * Q20_选项2 + 2 * Q20_选项6 + 2 * Q20_选项7 + 2 * Q20_选项8 + 
+      2 * Q20_选项9 + 2 * Q20_选项10 + 2 * Q20_选项11 + 2 * Q20_选项12 + 2 * Q20_选项15 +
+      3 * Q20_选项5 + 3 * Q20_选项13 + 3 * Q20_选项14,
+  
+    victm_student_sum =
+      1 * Q29_选项1 + 1 * Q29_选项3 + 1 * Q29_选项4 +
+      2 * Q29_选项2 + 2 * Q29_选项6 + 2 * Q29_选项7 + 2 * Q29_选项8 +
+      2 * Q29_选项9 + 2 * Q29_选项12 +
+      3 * Q29_选项5 + 3 * Q29_选项10 + 3 * Q29_选项11,
+
+    victimization_sum = victm_teacher_sum + victm_student_sum,
+
+    # outness sum
+    outness = 2 - Q16,
+    out_to_teacher = ifelse(Q17 == 1, 1, 0),
+    public_out = ifelse(Q21 == 1, 1, 0),
+    out_to_queer_friends = ifelse(Q23 == -3, 1, Q23),
+    out_to_nonqueer_friends = ifelse(Q24 == -3, 1, Q24),
+    
+    out_to_teacher_norm = out_to_teacher,
+    out_to_queer_friends_norm = (out_to_queer_friends - 1)/4,  # 1-5 -> 0-1
+    out_to_nonqueer_friends_norm = (out_to_nonqueer_friends - 1)/4,  # 1-5 -> 0-1
+    
+    outness_sum = rowSums(pick(all_of(c("out_to_teacher_norm","out_to_queer_friends_norm","out_to_nonqueer_friends_norm")))),
+    
+    # perceived LGBTQ+-affirming attitude
+    perceived_acceptance_teacher = 5 - Q19,
+    perceived_acceptance_student = 5 - Q28,
+    
+    victimization_teacher = 1 - Q20_选项17,
+    victimization_student = 1 - Q29_选项14,
+    victimization_ever = ifelse(victimization_teacher == 1 | victimization_student == 1, 1, 0),
+    
+    # Self-restraint of gender expression
+    self_restraint_allstudent = 10 - Q27_行1 - Q27_行2,
+    self_restraint_otherLGBTQ = 5 - Q27_行1,
+    self_restraint_otherstudents = 5 - Q27_行2,
+    self_restraint = self_restraint_teacher + self_restraint_allstudent - 3,
+    
+    # self-esteem: Rosenberg Self-Esteem Scale, RSES
+    # reverse score
+    Q31_行3_r  = 6 - Q31_行3,
+    Q31_行5_r  = 6 - Q31_行5,
+    Q31_行8_r  = 6 - Q31_行8,
+    Q31_行9_r  = 6 - Q31_行9,
+    Q31_行10_r = 6 - Q31_行10,
+    
+    # Score sum
+    self_esteem = rowSums(
+      pick(all_of(c(
+        "Q31_行1", "Q31_行2", "Q31_行3_r", "Q31_行4", "Q31_行5_r",
+        "Q31_行6", "Q31_行7", "Q31_行8_r", "Q31_行9_r", "Q31_行10_r"
+      ))),
+      na.rm = TRUE
+    ),
+    
+    # depression: Center for Epidemiologic Studies Depression Scale, CESD 9-item Chinese version
+    Q30_行5_r = 5 - Q30_行5,
+    Q30_行7_r = 5 - Q30_行7,
+    
+    depression = Q30_行1 + Q30_行2 + Q30_行3 + Q30_行4 + Q30_行5_r + Q30_行6 + Q30_行7_r + Q30_行8 + Q30_行9,
+    
+    #anxiety: Generalized Anxiety Disorder Scale, GAD-7
+    anxiety = rowSums(pick(all_of(c("Q32_行1", "Q32_行2", "Q32_行3", "Q32_行4", "Q32_行5", "Q32_行6", "Q32_行7"))), na.rm = TRUE),
+  ) |>
+  
+  #drop inconsistent cases
+  filter(!((documented_female == 1 & assigned_male == 1 & transgender == 0) | (documented_male == 1 & assigned_female == 1 & transgender == 0)) %in% TRUE) |>
+  filter(!(LGBTQ == 0 & outness == 1)) |>
+  filter(!(index == 1273)) |>
+  filter(!(age < 18))
+
+```
+
+
+```{r}
+#check inconsistent cases
+#transgender
+df |>
+  filter((documented_female == 1 & assigned_male == 1 & transgender == 0) | (documented_male == 1 & assigned_female == 1 & transgender == 0))
+
+#outness
+df |>
+  filter((outness == 0 & out_to_teacher== 1) | (outness == 0 & public_out == 1))
+
+
+#outness in nonLGBTQ
+#SOGIE-based victimization among non-LGBTQ+
+df |>
+  filter(LGBTQ == 0 & outness == 1)
+
+df |>
+  filter(LGBTQ == 0 & out_to_teacher == 1)
+```
+
+```{r}
+
+```
+
+
+# 3. Association
+
+```{r}
+key_var = c("depression","anxiety", "self_esteem", 
+                   "victimization_sum", "gn", "outness_sum", "self_restraint",
+                   "LGBTQ", "documented_female",
+                   "age", "singleness", "counseling_service")
+
+cont_var = c("depression","anxiety", "self_esteem", "victimization_sum", "gn", "outness_sum", "self_restraint", "age")
+bin_var = c("LGBTQ", "documented_female", "singleness", "counseling_service")
+
+res = mixedCor(
+  df[, c(cont_var, bin_var)],
+  c = cont_var,
+  p = bin_var
+)
+
+res$rho |> knitr::kable(digits = 3)
+```
+
+# 4. Linear Regression
+
+### step-wise variable selection (outcome: depression)
+```{r}
+df_sw = df |> 
+  select(any_of(key_var)) |> 
+  select(-anxiety, -counseling_service) |>
+  mutate(
+    LGBTQ = factor(
+      LGBTQ,
+      levels = c(0, 1),
+      labels = c("n", "y")
+    )
+  )
+
+# full model
+full_model <- lm(depression ~ (.)^2, data = df_sw)
+
+# null/intercept-only model
+null_model <- lm(depression ~ 1, data = df_sw)
+
+# stepwise selection: both directions
+step_model <- step(
+  null_model,
+  scope = list(
+    lower = null_model,
+    upper = full_model
+  ),
+  direction = "both"
+)
+
+summary(step_model)
+```
+```{r}
+lm1 = lm(
+  depression ~ 
+    self_esteem + singleness + LGBTQ  + victimization_sum + self_restraint + LGBTQ:self_restraint + self_esteem:self_restraint, 
+  data = df)
+summary(lm1)
+```
+
+```{r}
+lm1.1 = lm(
+  depression ~ 
+    self_esteem + singleness + LGBTQ  + victimization_sum + self_restraint + gn + LGBTQ:self_restraint + self_esteem:self_restraint, 
+  data = df)
+summary(lm1.1)
+```
+
+### step-wise variable selection (outcome: self_restraint)
+
+```{r}
+df_sw = df |> 
+  select(any_of(key_var)) |> 
+  select(-anxiety, -counseling_service, -depression) |>
+  mutate(
+    LGBTQ = factor(
+      LGBTQ,
+      levels = c(0, 1),
+      labels = c("n", "y")
+    )
+  )
+
+# full model
+full_model <- lm(self_restraint ~ (.)^2, data = df_sw)
+
+# null/intercept-only model
+null_model <- lm(self_restraint ~ 1, data = df_sw)
+
+# stepwise selection: both directions
+step_model <- step(
+  null_model,
+  scope = list(
+    lower = null_model,
+    upper = full_model
+  ),
+  direction = "both"
+)
+
+summary(step_model)
+```
+
+```{r}
+lm2 = lm(
+  formula = self_restraint ~ LGBTQ + outness_sum + documented_female + self_esteem + gn + age + victimization_sum + LGBTQ:age + gn:age + self_esteem:victimization_sum, 
+  data = df
+)
+summary(lm2)
+```
+
+```{r}
+df_sw |>
+  ggplot(aes(x = age, y = self_restraint, color = LGBTQ)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = TRUE) +
+  theme_minimal()
+```
+
+### step-wise variable selection (outcome: victimization_sum)
+
+```{r}
+df_sw = df |> 
+  select(any_of(key_var)) |> 
+  select(-anxiety, -counseling_service, -depression, -self_restraint) |>
+  mutate(
+    LGBTQ = factor(
+      LGBTQ,
+      levels = c(0, 1),
+      labels = c("n", "y")
+    )
+  )
+
+# full model
+full_model <- lm(victimization_sum ~ (.)^2, data = df_sw)
+
+# null/intercept-only model
+null_model <- lm(victimization_sum ~ 1, data = df_sw)
+
+# stepwise selection: both directions
+step_model <- step(
+  null_model,
+  scope = list(
+    lower = null_model,
+    upper = full_model
+  ),
+  direction = "both"
+)
+
+summary(step_model)
+```
+
+```{r}
+lm3 = lm(
+  formula = victimization_sum ~ gn + outness_sum + self_esteem + documented_female + LGBTQ + age + gn:outness_sum + gn:self_esteem + outness_sum:self_esteem + self_esteem:documented_female + outness_sum:documented_female + gn:LGBTQ, 
+  data = df_sw)
+```
+
+### Regression F1
+
+```{r}
+df_model1 = df |>
+  filter(LGBTQ == 1) |>
+  select(gn, self_restraint, depression, victimization_sum, documented_female, self_esteem, singleness, outness_sum)
+
+model1 = lm(depression ~., data = df_model1)
+summary(model1)
+```
+
+```{r}
+df_model2 = df |>
+  filter(LGBTQ == 0) |>
+  select(gn, self_restraint, depression, victimization_sum, documented_female, self_esteem, singleness, outness_sum)
+
+model2 = lm(depression ~., data = df_model2)
+summary(model2)
+```
+
+```{r}
+df_model3 = df |>
+  select(LGBTQ, gn, self_restraint, depression, victimization_sum, documented_female, self_esteem, singleness, outness_sum)
+
+model3 = lm(depression ~., data = df_model3)
+summary(model3)
+```
