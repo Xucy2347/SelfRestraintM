@@ -1,6 +1,6 @@
 ---
 title: "Self Restraint and Depression"
-author: "Chuyuan XU"
+author: "Shichang Yang, Chuyuan XU"
 date: "2026-05-23"
 output: 
   html_document:
@@ -16,8 +16,15 @@ library(gt)
 library(gtsummary)
 library(flextable)
 library(lavaan)
+library(semPlot)
 
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(
+  echo = TRUE, 
+  fig.align = "center", 
+  fig.width = 8,
+  dev = "png",
+  dpi = 300
+)
 ```
 
 # 1. Cleaning
@@ -154,31 +161,7 @@ df = df_r |>
 
 ```
 
-
-```{r}
-#check inconsistent cases
-#transgender
-df |>
-  filter((documented_female == 1 & assigned_male == 1 & transgender == 0) | (documented_male == 1 & assigned_female == 1 & transgender == 0))
-
-#outness
-df |>
-  filter((outness == 0 & out_to_teacher== 1) | (outness == 0 & public_out == 1))
-
-
-#outness in nonLGBTQ
-#SOGIE-based victimization among non-LGBTQ+
-df |>
-  filter(LGBTQ == 0 & outness == 1)
-
-df |>
-  filter(LGBTQ == 0 & out_to_teacher == 1)
-```
-
-```{r}
-
-```
-
+After cleaning, there are `r dim(df)[1]` observations and `r dim(df)[2]` columns.
 
 # 3. Association
 
@@ -363,4 +346,174 @@ df_model3 = df |>
 
 model3 = lm(depression ~., data = df_model3)
 summary(model3)
+```
+
+# 5. Path
+
+### Depression ~ LGBTQ 
+
+```{r}
+# SEM: Identity -> victimization + self-restrain -> depression
+s1.1_dep_model <- '
+  # outcome
+  depression ~ a*LGBTQ + b*victimization_sum + c*self_restraint + f1*documented_female + g*self_esteem
+  
+  # mediation paths
+  victimization_sum ~ d*LGBTQ + f2*documented_female
+  self_restraint ~ e*LGBTQ + f3*documented_female
+
+  # self-esteem
+  self_esteem ~~ victimization_sum
+  self_esteem ~~ self_restraint
+  self_esteem ~~ LGBTQ
+  gn ~~ self_restraint
+  gn ~~ victimization_sum
+  gn ~~ LGBTQ
+
+  # indirect effects
+  indirect_victimization := b*d
+  indirect_selfrestraint := e*c
+  total_indirect := indirect_victimization + indirect_selfrestraint
+
+  # total effect
+  total_effect := a + total_indirect
+'
+
+s1.1_dep_fit <- sem(s1.1_dep_model, data=df, estimator="MLR")
+```
+
+```{r}
+summary(s1.1_dep_fit, standardized=TRUE, fit.measures=TRUE)
+semPaths(s1.1_dep_fit)
+semPaths(s1.1_dep_fit, intercept = FALSE, what = "std", whatLabels="std", reorder = FALSE, 
+         rainbow = .5, rotation = 2, layout = "spring")
+```
+
+### 5.1 Depression Model: Gender nonconformity -> victimization + self-restrain -> depression
+```{r}
+# SEM: Gender nonconformity -> victimization + self-restrain -> depression
+s2_dep_model_moderated <- '
+  # outcome
+  depression ~ a*gn + b*victimization_sum + c*self_restraint + h*interaction_selfrest_LGBTQ + f1*documented_female + i * self_esteem
+  
+  # mediation paths
+  victimization_sum ~ d*gn + f2*documented_female
+  self_restraint ~ e*gn + g*interaction_gn_LGBTQ + f3*documented_female
+
+  # accounting for:
+  self_esteem ~~ victimization_sum
+  self_esteem ~~ self_restraint
+  self_esteem ~~ gn
+  self_esteem ~~ LGBTQ
+  self_esteem ~~ outness_sum
+  outness_sum ~~ depression
+  outness_sum ~~ self_restraint
+  outness_sum ~~ victimization_sum
+  outness_sum ~~ gn
+  outness_sum ~ LGBTQ
+  LGBTQ ~~ self_restraint
+  LGBTQ ~~ victimization_sum
+  LGBTQ ~~ gn
+  LGBTQ ~~ depression
+  gn ~ documented_female
+  
+  # indirect effects
+  indirect_sr_LGBTQ0 := e * c
+  indirect_sr_LGBTQ1 := (e + g) * (c + h)
+  indirect_victimization := b*d
+  total_indirect_LGBTQ0 := indirect_victimization + indirect_sr_LGBTQ0
+  total_indirect_LGBTQ1 := indirect_victimization + indirect_sr_LGBTQ1
+
+  # total effect
+  total_effect_LGBTQ0 := a + total_indirect_LGBTQ0
+  total_effect_LGBTQ1 := a + total_indirect_LGBTQ1
+'
+```
+
+```{r}
+#with LGBTQ as moderator
+df1 = df |>
+  mutate(
+    interaction_gn_LGBTQ = gn * LGBTQ,
+    interaction_selfrest_LGBTQ = self_restraint * LGBTQ
+  )
+
+s2_dep_fit_moderated <- sem(s2_dep_model_moderated, data=df1, estimator="ML", se="bootstrap" , bootstrap=1000)
+summary(s2_dep_fit_moderated, standardized=TRUE, fit.measures=TRUE)
+```
+
+### 5.2 Depression Model: Gender nonconformity -> victimization + self-restrain -> depression (without Outness, LGBTQ EMM)
+
+```{r}
+# SEM: Gender nonconformity -> victimization + self-restrain -> depression
+s2_dep_model_5.2 <- '
+  # outcome
+  depression ~ a*gn + b*victimization_sum + c*self_restraint + h*interaction_selfrest_LGBTQ + f1*documented_female + i*self_esteem
+  
+  # mediation paths
+  victimization_sum ~ d*gn + f2*documented_female
+  self_restraint ~ e*gn + f3*documented_female
+
+  # accounting for:
+  self_esteem ~~ victimization_sum
+  self_esteem ~~ self_restraint
+  self_esteem ~~ gn
+  self_esteem ~~ LGBTQ
+  LGBTQ ~~ self_restraint
+  LGBTQ ~~ victimization_sum
+  LGBTQ ~~ gn
+  LGBTQ ~~ depression
+  gn ~ documented_female
+  
+  # indirect effects
+  indirect_sr_LGBTQ0 := e * c
+  indirect_sr_LGBTQ1 := (e) * (c + h)
+  indirect_victimization := b*d
+  total_indirect_LGBTQ0 := indirect_victimization + indirect_sr_LGBTQ0
+  total_indirect_LGBTQ1 := indirect_victimization + indirect_sr_LGBTQ1
+
+  # total effect
+  total_effect_LGBTQ0 := a + total_indirect_LGBTQ0
+  total_effect_LGBTQ1 := a + total_indirect_LGBTQ1
+'
+```
+
+```{r}
+#with LGBTQ as moderator
+df_5.2 = df |>
+  mutate(
+    interaction_selfrest_LGBTQ = self_restraint * LGBTQ
+  )
+s2_dep_fit_5.2 <- sem(s2_dep_model_5.2, data=df_5.2, estimator="ML", se="bootstrap" , bootstrap=1000)
+```
+
+```{r}
+summary(s2_dep_fit_5.2, standardized=TRUE, fit.measures=TRUE)
+```
+
+```{r}
+semPaths(s2_dep_fit_5.2)
+semPaths(s2_dep_fit_5.2, intercept = FALSE, what = "std", whatLabels="std", reorder = FALSE, 
+         rainbow = .5, rotation = 2, layout = "spring")
+```
+
+### 5.3 Depression Model: Gender nonconformity -> victimization + self-restrain -> depression (without Outness, LGBTQ EMM) estimator = "WLSMV"
+
+```{r}
+#with LGBTQ as moderator
+df_5.2 = df |>
+  mutate(
+    interaction_selfrest_LGBTQ = self_restraint * LGBTQ
+  )
+s2_dep_fit_5.3 <- sem(s2_dep_model_5.2, data=df_5.2, estimator="MLR")
+```
+
+```{r}
+summary(s2_dep_fit_5.3, standardized=TRUE, fit.measures=TRUE)
+```
+
+```{r}
+semPaths(s2_dep_fit_5.3)
+semPaths(s2_dep_fit_5.3, intercept = FALSE, what = "std", whatLabels="std", reorder = FALSE, 
+         rainbow = .5, rotation = 2, layout = "spring")
 ```

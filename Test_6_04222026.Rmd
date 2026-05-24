@@ -9,7 +9,15 @@ output:
 
 ```{r setup, include=FALSE}
 library(tidyverse)
-knitr::opts_chunk$set(echo = TRUE)
+library(semPlot)
+
+knitr::opts_chunk$set(
+  echo = TRUE, 
+  fig.align = "center", 
+  fig.width = 8,
+  dev = "png",
+  dpi = 300
+)
 ```
 
 # 1. Cleaning
@@ -634,17 +642,26 @@ s1_dep_model <- '
 '
 
 s1_dep_fit <- sem(s1_dep_model, data=df1, estimator="ML", se="bootstrap" , bootstrap=1000)
+```
+
+```{r}
 summary(s1_dep_fit, standardized=TRUE, fit.measures=TRUE)
 ```
 
-## 4.1.1 S1 dep - singleness added
+```{r}
+semPaths(s1_dep_fit)
+semPaths(s1_dep_fit, intercept = FALSE, what = "std", whatLabels="std", reorder = FALSE, 
+         rainbow = .5, rotation = 2, layout = "spring")
+```
+
+## 4.1.1 S1 dep <- + self_esteem
 
 ```{r}
 library('lavaan')
 # SEM: Identity -> victimization + self-restrain -> depression
 s1.1_dep_model <- '
   # outcome
-  depression ~ a*LGBTQ + b*victimization_sum + c*self_restraint + f1*documented_female
+  depression ~ a*LGBTQ + b*victimization_sum + c*self_restraint + f1*documented_female + g*self_esteem
   
   # mediation paths
   victimization_sum ~ d*LGBTQ + f2*documented_female
@@ -653,12 +670,10 @@ s1.1_dep_model <- '
   # self-esteem
   self_esteem ~~ victimization_sum
   self_esteem ~~ self_restraint
-  self_esteem ~~ depression
   self_esteem ~~ LGBTQ
   gn ~~ self_restraint
   gn ~~ victimization_sum
   gn ~~ LGBTQ
-  depression ~~ singleness
 
   # indirect effects
   indirect_victimization := b*d
@@ -670,8 +685,16 @@ s1.1_dep_model <- '
 '
 
 s1.1_dep_fit <- sem(s1.1_dep_model, data=df1, estimator="ML", se="bootstrap" , bootstrap=1000)
-summary(s1.1_dep_fit, standardized=TRUE, fit.measures=TRUE)
 ```
+
+```{r}
+summary(s1.1_dep_fit, standardized=TRUE, fit.measures=TRUE)
+semPaths(s1.1_dep_fit)
+semPaths(s1.1_dep_fit, intercept = FALSE, what = "std", whatLabels="std", reorder = FALSE, 
+         rainbow = .5, rotation = 2, layout = "spring")
+```
+
+
 ##4.1.1 + age
 ```{r}
 library('lavaan')
@@ -841,6 +864,13 @@ s2_dep_model_moderated <- '
 s2_dep_fit_moderated <- sem(s2_dep_model_moderated, data=df1, estimator="ML", se="bootstrap" , bootstrap=1000)
 summary(s2_dep_fit_moderated, standardized=TRUE, fit.measures=TRUE)
 ```
+
+```{r}
+semPaths(s2_dep_fit_moderated)
+semPaths(s2_dep_fit_moderated, intercept = FALSE, what = "std", whatLabels="std", reorder = FALSE, 
+         rainbow = .5, rotation = 2, layout = "spring")
+```
+
 
 ## 6.2. S2 anx
 ```{r}
