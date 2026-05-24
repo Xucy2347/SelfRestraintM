@@ -216,6 +216,7 @@ step_model <- step(
 
 summary(step_model)
 ```
+
 ```{r}
 lm1 = lm(
   depression ~ 
