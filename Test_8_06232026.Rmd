@@ -16,7 +16,7 @@ When you click the **Knit** button a document will be generated that includes bo
 
 #1. Cleaning
 ```{r}
-df <- read.csv("C:/Users/sy3248/Desktop/Self-restraint/lgbtPKU.csv")
+df <- read.csv("lgbtPKU.csv")
 dim(df)
 ```
 
