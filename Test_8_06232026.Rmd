@@ -432,7 +432,7 @@ s1_dep_model <- '
 s1_dep_fit <- sem(s1_dep_model, data=df1, estimator="ML", se="bootstrap" , bootstrap=1000)
 summary(s1_dep_fit, standardized=TRUE, fit.measures=TRUE)
 ```
-#5.1.1. S1 dep
+#5.1.1. S1 dep   self_esteem ~~ self_restraint
 ```{r}
 library('lavaan')
 s1_dep_model <- '
@@ -452,7 +452,7 @@ s1_dep_model <- '
 s1_dep_fit <- sem(s1_dep_model, data=df1, estimator="ML", se="bootstrap" , bootstrap=1000)
 summary(s1_dep_fit, standardized=TRUE, fit.measures=TRUE)
 ```
-#5.1.2. S1 dep
+#5.1.2. S1 dep Independent mediators
 ```{r}
 s1_dep_model <- '
   depression ~ a*LGBTQ + b*victimization_sum + c*self_restraint + documented_female
@@ -468,17 +468,56 @@ s1_dep_model <- '
 s1_dep_fit <- sem(s1_dep_model, data=df1, estimator="ML", se="bootstrap" , bootstrap=1000)
 summary(s1_dep_fit, standardized=TRUE, fit.measures=TRUE)
 ```
-#5.1.3. S1 dep
+#5.1.3. S1 dep victimization → self_restraint
 ```{r}
 s1_dep_model <- '
   depression ~ a*LGBTQ + b*victimization_sum + c*self_restraint + documented_female
   
   victimization_sum ~ d*LGBTQ + documented_female
   self_restraint ~ e*LGBTQ + f*victimization_sum + documented_female
-
-  #effects 
+  
+  #effects
+  indirect_victimization := d*b
+  indirect_restraint := e*c
+  indirect_serial := e*f*b
   total_indirect := b*d + c*e + d*f*c
   total_effect := a + total_indirect
+'
+
+s1_dep_fit <- sem(s1_dep_model, data=df1, estimator="ML", se="bootstrap" , bootstrap=1000)
+summary(s1_dep_fit, standardized=TRUE, fit.measures=TRUE)
+```
+#5.1.4. S1 dep self_restraint → victimization
+```{r}
+s1_dep_model <- '
+  depression ~ a*LGBTQ + b*victimization_sum + c*self_restraint + documented_female
+  
+  victimization_sum ~ d*LGBTQ + documented_female + f*self_restraint
+  self_restraint ~ e*LGBTQ + documented_female
+  
+  # effects
+  indirect_victimization := d*b
+  indirect_restraint := e*c
+  indirect_serial := e*f*b
+  total_indirect := d*b + e*c + e*f*b
+  total_effect := a + total_indirect
+'
+
+s1_dep_fit <- sem(s1_dep_model, data=df1, estimator="ML", se="bootstrap" , bootstrap=1000)
+summary(s1_dep_fit, standardized=TRUE, fit.measures=TRUE)
+```
+#5.1.5. S1 dep Independent mediators & no direct association
+```{r}
+s1_dep_model <- '
+  depression ~ b*victimization_sum + c*self_restraint + documented_female
+  
+  victimization_sum ~ d*LGBTQ + documented_female
+  self_restraint ~ e*LGBTQ + documented_female
+
+  #effects
+  indirect_victimization := d*b
+  indirect_restraint := e*c
+  total_effect := b*d + c*e
 '
 
 s1_dep_fit <- sem(s1_dep_model, data=df1, estimator="ML", se="bootstrap" , bootstrap=1000)
@@ -513,25 +552,27 @@ s2s1_anx_model <- lm(anxiety ~ gn, data = df1)
 summary(s2s1_anx_model)
 ```
 
-#6.1. S2 dep
+#6.1.1. S2 dep 
 ```{r}
 s2_dep_model <- '
   depression ~ a*gn + b*victimization_sum + c*self_restraint + documented_female
   
   victimization_sum ~ d*gn + documented_female
-  self_restraint ~ e*gn + documented_female + f*victimization_sum
+  self_restraint ~ e*gn + documented_female
 
   gn ~ documented_female
   
-  #effects 
-  total_indirect := b*d + c*e + d*f*c
+  #effects
+  indirect_victimization := d*b
+  indirect_restraint := e*c
+  total_indirect := b*d + c*e
   total_effect := a + total_indirect
 '
 
 s2_dep_fit <- sem(s2_dep_model, data=df1, estimator="ML", se="bootstrap" , bootstrap=1000)
 summary(s2_dep_fit, standardized=TRUE, fit.measures=TRUE)
 ```
-#6.1.1 moderated by LGBTQ
+#6.1.2 moderation gn*LGBTQ
 ```{r}
 df1$interaction_gn_LGBTQ <- df1$gn * df1$LGBTQ
 
@@ -539,21 +580,44 @@ s2_dep_model_moderated <- '
   depression ~ a*gn + b*victimization_sum + c*self_restraint + documented_female
   
   victimization_sum ~ d*gn + documented_female
-  self_restraint ~ e*gn + f*victimization_sum + g*interaction_gn_LGBTQ + documented_female
+  self_restraint ~ e*gn + g*interaction_gn_LGBTQ + documented_female
 
   gn ~ documented_female
   
-  #effects
-  total_ind_nonLGBTQ := b*d + e*c + d*f*c
-  total_ind_LGBTQ := b*d + (e+g)*c + d*f*c
+  # indirect effects
+  ind_victimization := b*d
+  ind_SR_nonLGBTQ := e*c
+  ind_SR_LGBTQ := (e+g)*c
+  total_ind_nonLGBTQ := b*d + e*c
+  total_ind_LGBTQ := b*d + (e+g)*c
   total_nonLGBTQ := a + total_ind_nonLGBTQ
   total_LGBTQ := a + total_ind_LGBTQ
+  index_modmed := g*c
 '
 
 s2_dep_fit_moderated <- sem(s2_dep_model_moderated, data=df1, estimator="ML", se="bootstrap" , bootstrap=1000)
 summary(s2_dep_fit_moderated, standardized=TRUE, fit.measures=TRUE)
 ```
+#6.1.3 Grouped by LGBTQ
+```{r}
+s2_dep_model <- '
+  depression ~ a*gn + b*victimization_sum + c*self_restraint + documented_female
+  
+  victimization_sum ~ d*gn + documented_female
+  self_restraint ~ e*gn + documented_female
 
+  gn ~ documented_female
+  
+  #effects
+  indirect_victimization := d*b
+  indirect_restraint := e*c
+  total_indirect := b*d + c*e
+  total_effect := a + total_indirect
+'
+
+s2_dep_fit <- sem(s2_dep_model, data=df1, group = "LGBTQ", estimator="ML", se="bootstrap" , bootstrap=1000)
+summary(s2_dep_fit, standardized=TRUE, fit.measures=TRUE)
+```
 
 
 ## Including Plots

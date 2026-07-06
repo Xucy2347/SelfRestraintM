@@ -3345,35 +3345,35 @@ summary(s1_dep_fit, standardized=TRUE, fit.measures=TRUE)</code></pre>
 ## Regressions:
 ##                       Estimate  Std.Err  z-value  P(&gt;|z|)   Std.lv  Std.all
 ##   depression ~                                                             
-##     LGBTQ      (a)       1.071    0.513    2.088    0.037    1.071    0.060
-##     vctmztn_sm (b)       0.144    0.071    2.020    0.043    0.144    0.050
-##     slf_rstrnt (c)       0.143    0.074    1.935    0.053    0.143    0.057
-##     self_estem (d)      -0.523    0.025  -20.601    0.000   -0.523   -0.599
-##     dcmntd_fml           0.378    0.363    1.042    0.297    0.378    0.030
+##     LGBTQ      (a)       1.071    0.529    2.026    0.043    1.071    0.060
+##     vctmztn_sm (b)       0.144    0.074    1.945    0.052    0.144    0.050
+##     slf_rstrnt (c)       0.143    0.074    1.932    0.053    0.143    0.057
+##     self_estem (d)      -0.523    0.026  -20.297    0.000   -0.523   -0.599
+##     dcmntd_fml           0.378    0.355    1.065    0.287    0.378    0.030
 ##   victimization_sum ~                                                      
-##     LGBTQ      (f)       0.470    0.097    4.863    0.000    0.470    0.076
-##     dcmntd_fml          -0.258    0.135   -1.915    0.055   -0.258   -0.058
+##     LGBTQ      (f)       0.470    0.093    5.065    0.000    0.470    0.076
+##     dcmntd_fml          -0.258    0.131   -1.969    0.049   -0.258   -0.058
 ##   self_restraint ~                                                         
-##     LGBTQ      (e)       2.824    0.188   15.012    0.000    2.824    0.398
-##     self_estem (g)      -0.045    0.011   -3.997    0.000   -0.045   -0.130
-##     dcmntd_fml          -0.896    0.155   -5.799    0.000   -0.896   -0.177
+##     LGBTQ      (e)       2.824    0.192   14.699    0.000    2.824    0.398
+##     self_estem (g)      -0.045    0.011   -4.081    0.000   -0.045   -0.130
+##     dcmntd_fml          -0.896    0.162   -5.534    0.000   -0.896   -0.177
 ##   self_esteem ~                                                            
-##     vctmztn_sm (h)      -0.308    0.114   -2.705    0.007   -0.308   -0.093
-##     LGBTQ      (i)      -0.176    0.713   -0.247    0.805   -0.176   -0.009
-##     dcmntd_fml          -0.977    0.516   -1.892    0.059   -0.977   -0.067
+##     vctmztn_sm (h)      -0.308    0.116   -2.653    0.008   -0.308   -0.093
+##     LGBTQ      (i)      -0.176    0.712   -0.247    0.805   -0.176   -0.009
+##     dcmntd_fml          -0.977    0.529   -1.845    0.065   -0.977   -0.067
 ## 
 ## Variances:
 ##                    Estimate  Std.Err  z-value  P(&gt;|z|)   Std.lv  Std.all
-##    .depression       23.444    1.337   17.531    0.000   23.444    0.613
-##    .victimizatn_sm    4.576    1.775    2.579    0.010    4.576    0.989
-##    .self_restraint    4.664    0.204   22.881    0.000    4.664    0.765
-##    .self_esteem      49.690    2.236   22.225    0.000   49.690    0.988
+##    .depression       23.444    1.307   17.942    0.000   23.444    0.613
+##    .victimizatn_sm    4.576    1.677    2.728    0.006    4.576    0.989
+##    .self_restraint    4.664    0.206   22.610    0.000    4.664    0.765
+##    .self_esteem      49.690    2.217   22.415    0.000   49.690    0.988
 ## 
 ## Defined Parameters:
 ##                    Estimate  Std.Err  z-value  P(&gt;|z|)   Std.lv  Std.all
-##     total_indirect    0.641    0.431    1.489    0.137    0.641    0.036
-##     total_effect      1.712    0.642    2.668    0.008    1.712    0.096</code></pre>
-<p>#5.1.1. S1 dep</p>
+##     total_indirect    0.641    0.426    1.505    0.132    0.641    0.036
+##     total_effect      1.712    0.644    2.659    0.008    1.712    0.096</code></pre>
+<p>#5.1.1. S1 dep self_esteem ~~ self_restraint</p>
 <pre class="r"><code>library(&#39;lavaan&#39;)
 s1_dep_model &lt;- &#39;
   depression ~ a*LGBTQ + b*victimization_sum + c*self_restraint + d*self_esteem + documented_female
@@ -3446,39 +3446,39 @@ summary(s1_dep_fit, standardized=TRUE, fit.measures=TRUE)</code></pre>
 ## Regressions:
 ##                       Estimate  Std.Err  z-value  P(&gt;|z|)   Std.lv  Std.all
 ##   depression ~                                                             
-##     LGBTQ      (a)       1.071    0.536    2.000    0.046    1.071    0.060
-##     vctmztn_sm (b)       0.144    0.076    1.886    0.059    0.144    0.050
-##     slf_rstrnt (c)       0.143    0.076    1.879    0.060    0.143    0.057
-##     self_estem (d)      -0.523    0.025  -20.744    0.000   -0.523   -0.599
-##     dcmntd_fml           0.378    0.361    1.048    0.295    0.378    0.030
+##     LGBTQ      (a)       1.071    0.528    2.028    0.043    1.071    0.060
+##     vctmztn_sm (b)       0.144    0.074    1.943    0.052    0.144    0.050
+##     slf_rstrnt (c)       0.143    0.075    1.913    0.056    0.143    0.057
+##     self_estem (d)      -0.523    0.025  -21.334    0.000   -0.523   -0.599
+##     dcmntd_fml           0.378    0.362    1.044    0.296    0.378    0.030
 ##   victimization_sum ~                                                      
-##     LGBTQ      (f)       0.470    0.102    4.593    0.000    0.470    0.076
-##     dcmntd_fml          -0.258    0.130   -1.978    0.048   -0.258   -0.058
+##     LGBTQ      (f)       0.470    0.100    4.697    0.000    0.470    0.076
+##     dcmntd_fml          -0.258    0.129   -2.005    0.045   -0.258   -0.058
 ##   self_restraint ~                                                         
-##     LGBTQ      (e)       2.838    0.192   14.759    0.000    2.838    0.400
-##     dcmntd_fml          -0.856    0.165   -5.200    0.000   -0.856   -0.169
+##     LGBTQ      (e)       2.838    0.198   14.329    0.000    2.838    0.400
+##     dcmntd_fml          -0.856    0.161   -5.303    0.000   -0.856   -0.169
 ##   self_esteem ~                                                            
-##     vctmztn_sm (h)      -0.296    0.120   -2.465    0.014   -0.296   -0.090
-##     LGBTQ      (i)      -0.181    0.705   -0.257    0.797   -0.181   -0.009
-##     dcmntd_fml          -0.974    0.544   -1.791    0.073   -0.974   -0.067
+##     vctmztn_sm (h)      -0.296    0.112   -2.650    0.008   -0.296   -0.090
+##     LGBTQ      (i)      -0.181    0.696   -0.261    0.794   -0.181   -0.009
+##     dcmntd_fml          -0.974    0.537   -1.814    0.070   -0.974   -0.067
 ## 
 ## Covariances:
 ##                     Estimate  Std.Err  z-value  P(&gt;|z|)   Std.lv  Std.all
 ##  .self_restraint ~~                                                      
-##    .self_esteem       -2.240    0.562   -3.983    0.000   -2.240   -0.146
+##    .self_esteem       -2.240    0.587   -3.820    0.000   -2.240   -0.146
 ## 
 ## Variances:
 ##                    Estimate  Std.Err  z-value  P(&gt;|z|)   Std.lv  Std.all
-##    .depression       23.444    1.328   17.652    0.000   23.444    0.613
-##    .victimizatn_sm    4.576    1.766    2.591    0.010    4.576    0.989
-##    .self_restraint    4.767    0.208   22.947    0.000    4.767    0.782
-##    .self_esteem      49.691    2.222   22.365    0.000   49.691    0.988
+##    .depression       23.444    1.334   17.575    0.000   23.444    0.613
+##    .victimizatn_sm    4.576    1.700    2.692    0.007    4.576    0.989
+##    .self_restraint    4.767    0.200   23.883    0.000    4.767    0.782
+##    .self_esteem      49.691    2.359   21.060    0.000   49.691    0.988
 ## 
 ## Defined Parameters:
 ##                    Estimate  Std.Err  z-value  P(&gt;|z|)   Std.lv  Std.all
-##     total_indirect    0.641    0.423    1.514    0.130    0.641    0.036
-##     total_effect      1.712    0.630    2.717    0.007    1.712    0.096</code></pre>
-<p>#5.1.2. S1 dep</p>
+##     total_indirect    0.641    0.425    1.508    0.132    0.641    0.036
+##     total_effect      1.712    0.628    2.727    0.006    1.712    0.096</code></pre>
+<p>#5.1.2. S1 dep Independent mediators</p>
 <pre class="r"><code>s1_dep_model &lt;- &#39;
   depression ~ a*LGBTQ + b*victimization_sum + c*self_restraint + documented_female
   
@@ -3547,35 +3547,38 @@ summary(s1_dep_fit, standardized=TRUE, fit.measures=TRUE)</code></pre>
 ## Regressions:
 ##                       Estimate  Std.Err  z-value  P(&gt;|z|)   Std.lv  Std.all
 ##   depression ~                                                             
-##     LGBTQ      (a)       0.468    0.708    0.661    0.508    0.468    0.026
-##     vctmztn_sm (b)       0.299    0.097    3.083    0.002    0.299    0.104
-##     slf_rstrnt (c)       0.389    0.102    3.823    0.000    0.389    0.155
-##     dcmntd_fml           1.097    0.461    2.380    0.017    1.097    0.086
+##     LGBTQ      (a)       0.468    0.679    0.689    0.491    0.468    0.026
+##     vctmztn_sm (b)       0.299    0.096    3.107    0.002    0.299    0.104
+##     slf_rstrnt (c)       0.389    0.093    4.170    0.000    0.389    0.155
+##     dcmntd_fml           1.097    0.456    2.404    0.016    1.097    0.086
 ##   victimization_sum ~                                                      
-##     LGBTQ      (d)       0.470    0.097    4.866    0.000    0.470    0.076
-##     dcmntd_fml          -0.258    0.132   -1.962    0.050   -0.258   -0.058
+##     LGBTQ      (d)       0.470    0.095    4.960    0.000    0.470    0.076
+##     dcmntd_fml          -0.258    0.126   -2.052    0.040   -0.258   -0.058
 ##   self_restraint ~                                                         
-##     LGBTQ      (e)       2.838    0.196   14.492    0.000    2.838    0.400
-##     dcmntd_fml          -0.856    0.160   -5.336    0.000   -0.856   -0.169
+##     LGBTQ      (e)       2.838    0.196   14.450    0.000    2.838    0.400
+##     dcmntd_fml          -0.856    0.157   -5.451    0.000   -0.856   -0.169
 ## 
 ## Variances:
 ##                    Estimate  Std.Err  z-value  P(&gt;|z|)   Std.lv  Std.all
-##    .depression       36.741    1.854   19.813    0.000   36.741    0.961
-##    .victimizatn_sm    4.576    1.736    2.636    0.008    4.576    0.989
-##    .self_restraint    4.767    0.214   22.268    0.000    4.767    0.782
+##    .depression       36.741    1.900   19.338    0.000   36.741    0.961
+##    .victimizatn_sm    4.576    1.772    2.582    0.010    4.576    0.989
+##    .self_restraint    4.767    0.200   23.818    0.000    4.767    0.782
 ## 
 ## Defined Parameters:
 ##                    Estimate  Std.Err  z-value  P(&gt;|z|)   Std.lv  Std.all
-##     total_indirect    1.244    0.301    4.129    0.000    1.244    0.070
-##     total_effect      1.712    0.635    2.697    0.007    1.712    0.096</code></pre>
-<p>#5.1.3. S1 dep</p>
+##     total_indirect    1.244    0.277    4.488    0.000    1.244    0.070
+##     total_effect      1.712    0.626    2.735    0.006    1.712    0.096</code></pre>
+<p>#5.1.3. S1 dep victimization → self_restraint</p>
 <pre class="r"><code>s1_dep_model &lt;- &#39;
   depression ~ a*LGBTQ + b*victimization_sum + c*self_restraint + documented_female
   
   victimization_sum ~ d*LGBTQ + documented_female
   self_restraint ~ e*LGBTQ + f*victimization_sum + documented_female
-
-  #effects 
+  
+  #effects
+  indirect_victimization := d*b
+  indirect_restraint := e*c
+  indirect_serial := e*f*b
   total_indirect := b*d + c*e + d*f*c
   total_effect := a + total_indirect
 &#39;
@@ -3636,28 +3639,218 @@ summary(s1_dep_fit, standardized=TRUE, fit.measures=TRUE)</code></pre>
 ## Regressions:
 ##                       Estimate  Std.Err  z-value  P(&gt;|z|)   Std.lv  Std.all
 ##   depression ~                                                             
-##     LGBTQ      (a)       0.468    0.669    0.700    0.484    0.468    0.026
-##     vctmztn_sm (b)       0.299    0.092    3.238    0.001    0.299    0.104
-##     slf_rstrnt (c)       0.389    0.094    4.135    0.000    0.389    0.155
-##     dcmntd_fml           1.097    0.468    2.343    0.019    1.097    0.086
+##     LGBTQ      (a)       0.468    0.710    0.660    0.509    0.468    0.026
+##     vctmztn_sm (b)       0.299    0.097    3.081    0.002    0.299    0.104
+##     slf_rstrnt (c)       0.389    0.097    4.002    0.000    0.389    0.155
+##     dcmntd_fml           1.097    0.459    2.392    0.017    1.097    0.086
 ##   victimization_sum ~                                                      
-##     LGBTQ      (d)       0.470    0.101    4.676    0.000    0.470    0.076
-##     dcmntd_fml          -0.258    0.131   -1.965    0.049   -0.258   -0.058
+##     LGBTQ      (d)       0.470    0.097    4.869    0.000    0.470    0.076
+##     dcmntd_fml          -0.258    0.133   -1.940    0.052   -0.258   -0.058
 ##   self_restraint ~                                                         
-##     LGBTQ      (e)       2.827    0.201   14.080    0.000    2.827    0.398
-##     vctmztn_sm (f)       0.025    0.057    0.437    0.662    0.025    0.022
-##     dcmntd_fml          -0.849    0.158   -5.359    0.000   -0.849   -0.168
+##     LGBTQ      (e)       2.827    0.198   14.299    0.000    2.827    0.398
+##     vctmztn_sm (f)       0.025    0.056    0.441    0.659    0.025    0.022
+##     dcmntd_fml          -0.849    0.159   -5.349    0.000   -0.849   -0.168
 ## 
 ## Variances:
 ##                    Estimate  Std.Err  z-value  P(&gt;|z|)   Std.lv  Std.all
-##    .depression       36.741    1.828   20.104    0.000   36.741    0.960
-##    .victimizatn_sm    4.576    1.753    2.611    0.009    4.576    0.989
-##    .self_restraint    4.764    0.203   23.419    0.000    4.764    0.781
+##    .depression       36.741    1.895   19.392    0.000   36.741    0.960
+##    .victimizatn_sm    4.576    1.803    2.538    0.011    4.576    0.989
+##    .self_restraint    4.764    0.208   22.914    0.000    4.764    0.781
 ## 
 ## Defined Parameters:
 ##                    Estimate  Std.Err  z-value  P(&gt;|z|)   Std.lv  Std.all
-##     total_indirect    1.244    0.277    4.493    0.000    1.244    0.070
-##     total_effect      1.712    0.617    2.773    0.006    1.712    0.096</code></pre>
+##     indrct_vctmztn    0.141    0.053    2.631    0.009    0.141    0.008
+##     indirct_rstrnt    1.099    0.283    3.885    0.000    1.099    0.062
+##     indirect_seril    0.021    0.044    0.478    0.633    0.021    0.001
+##     total_indirect    1.244    0.288    4.314    0.000    1.244    0.070
+##     total_effect      1.712    0.664    2.579    0.010    1.712    0.096</code></pre>
+<p>#5.1.4. S1 dep self_restraint → victimization</p>
+<pre class="r"><code>s1_dep_model &lt;- &#39;
+  depression ~ a*LGBTQ + b*victimization_sum + c*self_restraint + documented_female
+  
+  victimization_sum ~ d*LGBTQ + documented_female + f*self_restraint
+  self_restraint ~ e*LGBTQ + documented_female
+  
+  # effects
+  indirect_victimization := d*b
+  indirect_restraint := e*c
+  indirect_serial := e*f*b
+  total_indirect := d*b + e*c + e*f*b
+  total_effect := a + total_indirect
+&#39;
+
+s1_dep_fit &lt;- sem(s1_dep_model, data=df1, estimator=&quot;ML&quot;, se=&quot;bootstrap&quot; , bootstrap=1000)
+summary(s1_dep_fit, standardized=TRUE, fit.measures=TRUE)</code></pre>
+<pre><code>## lavaan 0.6-21 ended normally after 1 iteration
+## 
+##   Estimator                                         ML
+##   Optimization method                           NLMINB
+##   Number of model parameters                        12
+## 
+##   Number of observations                           844
+## 
+## Model Test User Model:
+##                                                       
+##   Test statistic                                 0.000
+##   Degrees of freedom                                 0
+## 
+## Model Test Baseline Model:
+## 
+##   Test statistic                               252.515
+##   Degrees of freedom                                 9
+##   P-value                                        0.000
+## 
+## User Model versus Baseline Model:
+## 
+##   Comparative Fit Index (CFI)                    1.000
+##   Tucker-Lewis Index (TLI)                       1.000
+## 
+## Loglikelihood and Information Criteria:
+## 
+##   Loglikelihood user model (H0)              -6414.232
+##   Loglikelihood unrestricted model (H1)      -6414.232
+##                                                       
+##   Akaike (AIC)                               12852.465
+##   Bayesian (BIC)                             12909.323
+##   Sample-size adjusted Bayesian (SABIC)      12871.214
+## 
+## Root Mean Square Error of Approximation:
+## 
+##   RMSEA                                          0.000
+##   90 Percent confidence interval - lower         0.000
+##   90 Percent confidence interval - upper         0.000
+##   P-value H_0: RMSEA &lt;= 0.050                       NA
+##   P-value H_0: RMSEA &gt;= 0.080                       NA
+## 
+## Standardized Root Mean Square Residual:
+## 
+##   SRMR                                           0.000
+## 
+## Parameter Estimates:
+## 
+##   Standard errors                            Bootstrap
+##   Number of requested bootstrap draws             1000
+##   Number of successful bootstrap draws            1000
+## 
+## Regressions:
+##                       Estimate  Std.Err  z-value  P(&gt;|z|)   Std.lv  Std.all
+##   depression ~                                                             
+##     LGBTQ      (a)       0.468    0.660    0.709    0.478    0.468    0.026
+##     vctmztn_sm (b)       0.299    0.095    3.136    0.002    0.299    0.104
+##     slf_rstrnt (c)       0.389    0.097    3.996    0.000    0.389    0.155
+##     dcmntd_fml           1.097    0.455    2.412    0.016    1.097    0.086
+##   victimization_sum ~                                                      
+##     LGBTQ      (d)       0.402    0.155    2.602    0.009    0.402    0.065
+##     dcmntd_fml          -0.238    0.152   -1.567    0.117   -0.238   -0.054
+##     slf_rstrnt (f)       0.024    0.035    0.675    0.500    0.024    0.027
+##   self_restraint ~                                                         
+##     LGBTQ      (e)       2.838    0.184   15.432    0.000    2.838    0.400
+##     dcmntd_fml          -0.856    0.153   -5.604    0.000   -0.856   -0.169
+## 
+## Variances:
+##                    Estimate  Std.Err  z-value  P(&gt;|z|)   Std.lv  Std.all
+##    .depression       36.741    1.942   18.922    0.000   36.741    0.960
+##    .victimizatn_sm    4.574    1.776    2.575    0.010    4.574    0.988
+##    .self_restraint    4.767    0.203   23.443    0.000    4.767    0.782
+## 
+## Defined Parameters:
+##                    Estimate  Std.Err  z-value  P(&gt;|z|)   Std.lv  Std.all
+##     indrct_vctmztn    0.120    0.060    2.003    0.045    0.120    0.007
+##     indirct_rstrnt    1.103    0.283    3.899    0.000    1.103    0.062
+##     indirect_seril    0.020    0.030    0.667    0.505    0.020    0.001
+##     total_indirect    1.244    0.286    4.344    0.000    1.244    0.070
+##     total_effect      1.712    0.599    2.860    0.004    1.712    0.096</code></pre>
+<p>#5.1.5. S1 dep Independent mediators &amp; no direct association</p>
+<pre class="r"><code>s1_dep_model &lt;- &#39;
+  depression ~ b*victimization_sum + c*self_restraint + documented_female
+  
+  victimization_sum ~ d*LGBTQ + documented_female
+  self_restraint ~ e*LGBTQ + documented_female
+
+  #effects
+  indirect_victimization := d*b
+  indirect_restraint := e*c
+  total_effect := b*d + c*e
+&#39;
+
+s1_dep_fit &lt;- sem(s1_dep_model, data=df1, estimator=&quot;ML&quot;, se=&quot;bootstrap&quot; , bootstrap=1000)
+summary(s1_dep_fit, standardized=TRUE, fit.measures=TRUE)</code></pre>
+<pre><code>## lavaan 0.6-21 ended normally after 1 iteration
+## 
+##   Estimator                                         ML
+##   Optimization method                           NLMINB
+##   Number of model parameters                        10
+## 
+##   Number of observations                           844
+## 
+## Model Test User Model:
+##                                                       
+##   Test statistic                                 0.985
+##   Degrees of freedom                                 2
+##   P-value (Chi-square)                           0.611
+## 
+## Model Test Baseline Model:
+## 
+##   Test statistic                               252.515
+##   Degrees of freedom                                 9
+##   P-value                                        0.000
+## 
+## User Model versus Baseline Model:
+## 
+##   Comparative Fit Index (CFI)                    1.000
+##   Tucker-Lewis Index (TLI)                       1.019
+## 
+## Loglikelihood and Information Criteria:
+## 
+##   Loglikelihood user model (H0)              -6414.725
+##   Loglikelihood unrestricted model (H1)      -6414.232
+##                                                       
+##   Akaike (AIC)                               12849.449
+##   Bayesian (BIC)                             12896.831
+##   Sample-size adjusted Bayesian (SABIC)      12865.074
+## 
+## Root Mean Square Error of Approximation:
+## 
+##   RMSEA                                          0.000
+##   90 Percent confidence interval - lower         0.000
+##   90 Percent confidence interval - upper         0.055
+##   P-value H_0: RMSEA &lt;= 0.050                    0.926
+##   P-value H_0: RMSEA &gt;= 0.080                    0.005
+## 
+## Standardized Root Mean Square Residual:
+## 
+##   SRMR                                           0.008
+## 
+## Parameter Estimates:
+## 
+##   Standard errors                            Bootstrap
+##   Number of requested bootstrap draws             1000
+##   Number of successful bootstrap draws            1000
+## 
+## Regressions:
+##                       Estimate  Std.Err  z-value  P(&gt;|z|)   Std.lv  Std.all
+##   depression ~                                                             
+##     vctmztn_sm (b)       0.303    0.092    3.286    0.001    0.303    0.105
+##     slf_rstrnt (c)       0.415    0.087    4.796    0.000    0.415    0.166
+##     dcmntd_fml           1.059    0.458    2.313    0.021    1.059    0.083
+##   victimization_sum ~                                                      
+##     LGBTQ      (d)       0.470    0.097    4.828    0.000    0.470    0.076
+##     dcmntd_fml          -0.258    0.134   -1.932    0.053   -0.258   -0.058
+##   self_restraint ~                                                         
+##     LGBTQ      (e)       2.838    0.190   14.945    0.000    2.838    0.400
+##     dcmntd_fml          -0.856    0.150   -5.689    0.000   -0.856   -0.169
+## 
+## Variances:
+##                    Estimate  Std.Err  z-value  P(&gt;|z|)   Std.lv  Std.all
+##    .depression       36.762    1.852   19.852    0.000   36.762    0.961
+##    .victimizatn_sm    4.576    1.745    2.622    0.009    4.576    0.989
+##    .self_restraint    4.767    0.207   23.043    0.000    4.767    0.782
+## 
+## Defined Parameters:
+##                    Estimate  Std.Err  z-value  P(&gt;|z|)   Std.lv  Std.all
+##     indrct_vctmztn    0.142    0.051    2.782    0.005    0.142    0.008
+##     indirct_rstrnt    1.179    0.259    4.552    0.000    1.179    0.066
+##     total_effect      1.321    0.263    5.027    0.000    1.321    0.074</code></pre>
 </div>
 <div id="s1-anx" class="section level1">
 <h1>5.2. S1 anx</h1>
@@ -3729,28 +3922,28 @@ summary(s1_anx_fit, standardized=TRUE, fit.measures=TRUE)</code></pre>
 ## Regressions:
 ##                       Estimate  Std.Err  z-value  P(&gt;|z|)   Std.lv  Std.all
 ##   anxiety ~                                                                
-##     LGBTQ      (a)       0.335    0.502    0.666    0.506    0.335    0.024
-##     vctmztn_sm (b)       0.391    0.066    5.944    0.000    0.391    0.175
-##     slf_rstrnt (c)       0.169    0.076    2.214    0.027    0.169    0.087
-##     dcmntd_fml           0.829    0.360    2.303    0.021    0.829    0.084
+##     LGBTQ      (a)       0.335    0.509    0.658    0.511    0.335    0.024
+##     vctmztn_sm (b)       0.391    0.072    5.409    0.000    0.391    0.175
+##     slf_rstrnt (c)       0.169    0.072    2.339    0.019    0.169    0.087
+##     dcmntd_fml           0.829    0.358    2.314    0.021    0.829    0.084
 ##   victimization_sum ~                                                      
-##     LGBTQ      (d)       0.470    0.101    4.673    0.000    0.470    0.076
-##     dcmntd_fml          -0.258    0.126   -2.053    0.040   -0.258   -0.058
+##     LGBTQ      (d)       0.470    0.095    4.966    0.000    0.470    0.076
+##     dcmntd_fml          -0.258    0.138   -1.868    0.062   -0.258   -0.058
 ##   self_restraint ~                                                         
-##     LGBTQ      (e)       2.827    0.189   14.924    0.000    2.827    0.398
-##     vctmztn_sm (f)       0.025    0.056    0.443    0.657    0.025    0.022
-##     dcmntd_fml          -0.849    0.162   -5.231    0.000   -0.849   -0.168
+##     LGBTQ      (e)       2.827    0.195   14.479    0.000    2.827    0.398
+##     vctmztn_sm (f)       0.025    0.055    0.454    0.650    0.025    0.022
+##     dcmntd_fml          -0.849    0.156   -5.448    0.000   -0.849   -0.168
 ## 
 ## Variances:
 ##                    Estimate  Std.Err  z-value  P(&gt;|z|)   Std.lv  Std.all
-##    .anxiety          21.930    1.289   17.013    0.000   21.930    0.956
-##    .victimizatn_sm    4.576    1.790    2.556    0.011    4.576    0.989
-##    .self_restraint    4.764    0.198   24.026    0.000    4.764    0.781
+##    .anxiety          21.930    1.258   17.435    0.000   21.930    0.956
+##    .victimizatn_sm    4.576    1.725    2.653    0.008    4.576    0.989
+##    .self_restraint    4.764    0.205   23.270    0.000    4.764    0.781
 ## 
 ## Defined Parameters:
 ##                    Estimate  Std.Err  z-value  P(&gt;|z|)   Std.lv  Std.all
-##     total_indirect    0.663    0.224    2.966    0.003    0.663    0.048
-##     total_effect      0.998    0.462    2.158    0.031    0.998    0.072</code></pre>
+##     total_indirect    0.663    0.217    3.060    0.002    0.663    0.048
+##     total_effect      0.998    0.460    2.168    0.030    0.998    0.072</code></pre>
 <p>#6. S2 GN</p>
 <pre class="r"><code>#simple linear regression: Mental health ~ Gender nonconformity
 s2s1_dep_model &lt;- lm(depression ~ gn, data = df1)
@@ -3793,36 +3986,39 @@ summary(s2s1_anx_model)</code></pre>
 ## Residual standard error: 4.785 on 842 degrees of freedom
 ## Multiple R-squared:  0.003967,   Adjusted R-squared:  0.002784 
 ## F-statistic: 3.354 on 1 and 842 DF,  p-value: 0.0674</code></pre>
-<p>#6.1. S2 dep</p>
+<p>#6.1.1. S2 dep</p>
 <pre class="r"><code>s2_dep_model &lt;- &#39;
   depression ~ a*gn + b*victimization_sum + c*self_restraint + documented_female
   
   victimization_sum ~ d*gn + documented_female
-  self_restraint ~ e*gn + documented_female + f*victimization_sum
+  self_restraint ~ e*gn + documented_female
 
   gn ~ documented_female
   
-  #effects 
-  total_indirect := b*d + c*e + d*f*c
+  #effects
+  indirect_victimization := d*b
+  indirect_restraint := e*c
+  total_indirect := b*d + c*e
   total_effect := a + total_indirect
 &#39;
 
 s2_dep_fit &lt;- sem(s2_dep_model, data=df1, estimator=&quot;ML&quot;, se=&quot;bootstrap&quot; , bootstrap=1000)</code></pre>
 <pre><code>## Warning: lavaan-&gt;lav_model_nvcov_bootstrap():  
-##    37 bootstrap runs failed or did not converge.</code></pre>
+##    3 bootstrap runs failed or did not converge.</code></pre>
 <pre class="r"><code>summary(s2_dep_fit, standardized=TRUE, fit.measures=TRUE)</code></pre>
 <pre><code>## lavaan 0.6-21 ended normally after 1 iteration
 ## 
 ##   Estimator                                         ML
 ##   Optimization method                           NLMINB
-##   Number of model parameters                        14
+##   Number of model parameters                        13
 ## 
 ##   Number of observations                           844
 ## 
 ## Model Test User Model:
 ##                                                       
-##   Test statistic                                 0.000
-##   Degrees of freedom                                 0
+##   Test statistic                                 0.986
+##   Degrees of freedom                                 1
+##   P-value (Chi-square)                           0.321
 ## 
 ## Model Test Baseline Model:
 ## 
@@ -3833,79 +4029,84 @@ s2_dep_fit &lt;- sem(s2_dep_model, data=df1, estimator=&quot;ML&quot;, se=&quot;
 ## User Model versus Baseline Model:
 ## 
 ##   Comparative Fit Index (CFI)                    1.000
-##   Tucker-Lewis Index (TLI)                       1.000
+##   Tucker-Lewis Index (TLI)                       1.001
 ## 
 ## Loglikelihood and Information Criteria:
 ## 
-##   Loglikelihood user model (H0)              -7321.541
+##   Loglikelihood user model (H0)              -7322.034
 ##   Loglikelihood unrestricted model (H1)      -7321.541
 ##                                                       
-##   Akaike (AIC)                               14671.082
-##   Bayesian (BIC)                             14737.416
-##   Sample-size adjusted Bayesian (SABIC)      14692.956
+##   Akaike (AIC)                               14670.068
+##   Bayesian (BIC)                             14731.664
+##   Sample-size adjusted Bayesian (SABIC)      14690.380
 ## 
 ## Root Mean Square Error of Approximation:
 ## 
 ##   RMSEA                                          0.000
 ##   90 Percent confidence interval - lower         0.000
-##   90 Percent confidence interval - upper         0.000
-##   P-value H_0: RMSEA &lt;= 0.050                       NA
-##   P-value H_0: RMSEA &gt;= 0.080                       NA
+##   90 Percent confidence interval - upper         0.091
+##   P-value H_0: RMSEA &lt;= 0.050                    0.684
+##   P-value H_0: RMSEA &gt;= 0.080                    0.091
 ## 
 ## Standardized Root Mean Square Residual:
 ## 
-##   SRMR                                           0.000
+##   SRMR                                           0.008
 ## 
 ## Parameter Estimates:
 ## 
 ##   Standard errors                            Bootstrap
 ##   Number of requested bootstrap draws             1000
-##   Number of successful bootstrap draws             963
+##   Number of successful bootstrap draws             997
 ## 
 ## Regressions:
 ##                       Estimate  Std.Err  z-value  P(&gt;|z|)   Std.lv  Std.all
 ##   depression ~                                                             
-##     gn         (a)       0.691    0.323    2.140    0.032    0.691    0.075
-##     vctmztn_sm (b)       0.266    0.097    2.752    0.006    0.266    0.093
-##     slf_rstrnt (c)       0.397    0.084    4.729    0.000    0.397    0.158
-##     dcmntd_fml           0.852    0.454    1.876    0.061    0.852    0.067
+##     gn         (a)       0.691    0.322    2.145    0.032    0.691    0.075
+##     vctmztn_sm (b)       0.266    0.099    2.684    0.007    0.266    0.093
+##     slf_rstrnt (c)       0.397    0.088    4.525    0.000    0.397    0.158
+##     dcmntd_fml           0.852    0.458    1.862    0.063    0.852    0.067
 ##   victimization_sum ~                                                      
-##     gn         (d)       0.577    0.271    2.127    0.033    0.577    0.181
-##     dcmntd_fml          -0.475    0.178   -2.676    0.007   -0.475   -0.108
+##     gn         (d)       0.577    0.276    2.088    0.037    0.577    0.181
+##     dcmntd_fml          -0.475    0.182   -2.615    0.009   -0.475   -0.108
 ##   self_restraint ~                                                         
-##     gn         (e)       0.357    0.129    2.775    0.006    0.357    0.097
-##     dcmntd_fml          -1.380    0.173   -7.991    0.000   -1.380   -0.272
-##     vctmztn_sm (f)       0.038    0.073    0.530    0.596    0.038    0.033
+##     gn         (e)       0.379    0.129    2.935    0.003    0.379    0.103
+##     dcmntd_fml          -1.399    0.173   -8.084    0.000   -1.399   -0.276
 ##   gn ~                                                                     
-##     dcmntd_fml           0.247    0.048    5.155    0.000    0.247    0.179
+##     dcmntd_fml           0.247    0.048    5.141    0.000    0.247    0.179
 ## 
 ## Variances:
 ##                    Estimate  Std.Err  z-value  P(&gt;|z|)   Std.lv  Std.all
-##    .depression       36.561    1.881   19.439    0.000   36.561    0.955
-##    .victimizatn_sm    4.455    1.610    2.768    0.006    4.455    0.963
-##    .self_restraint    5.625    0.217   25.980    0.000    5.625    0.922
-##    .gn                0.439    0.021   20.582    0.000    0.439    0.968
+##    .depression       36.561    1.835   19.919    0.000   36.561    0.956
+##    .victimizatn_sm    4.455    1.655    2.692    0.007    4.455    0.963
+##    .self_restraint    5.632    0.224   25.096    0.000    5.632    0.923
+##    .gn                0.439    0.022   19.953    0.000    0.439    0.968
 ## 
 ## Defined Parameters:
 ##                    Estimate  Std.Err  z-value  P(&gt;|z|)   Std.lv  Std.all
-##     total_indirect    0.304    0.107    2.834    0.005    0.304    0.033
-##     total_effect      0.995    0.323    3.083    0.002    0.995    0.108</code></pre>
-<p>#6.1.1 moderated by LGBTQ</p>
+##     indrct_vctmztn    0.154    0.093    1.653    0.098    0.154    0.017
+##     indirct_rstrnt    0.151    0.062    2.447    0.014    0.151    0.016
+##     total_indirect    0.304    0.101    2.999    0.003    0.304    0.033
+##     total_effect      0.995    0.318    3.126    0.002    0.995    0.108</code></pre>
+<p>#6.1.2 moderation gn*LGBTQ</p>
 <pre class="r"><code>df1$interaction_gn_LGBTQ &lt;- df1$gn * df1$LGBTQ
 
 s2_dep_model_moderated &lt;- &#39;
   depression ~ a*gn + b*victimization_sum + c*self_restraint + documented_female
   
   victimization_sum ~ d*gn + documented_female
-  self_restraint ~ e*gn + f*victimization_sum + g*interaction_gn_LGBTQ + documented_female
+  self_restraint ~ e*gn + g*interaction_gn_LGBTQ + documented_female
 
   gn ~ documented_female
   
-  #effects
-  total_ind_nonLGBTQ := b*d + e*c + d*f*c
-  total_ind_LGBTQ := b*d + (e+g)*c + d*f*c
+  # indirect effects
+  ind_victimization := b*d
+  ind_SR_nonLGBTQ := e*c
+  ind_SR_LGBTQ := (e+g)*c
+  total_ind_nonLGBTQ := b*d + e*c
+  total_ind_LGBTQ := b*d + (e+g)*c
   total_nonLGBTQ := a + total_ind_nonLGBTQ
   total_LGBTQ := a + total_ind_LGBTQ
+  index_modmed := g*c
 &#39;
 
 s2_dep_fit_moderated &lt;- sem(s2_dep_model_moderated, data=df1, estimator=&quot;ML&quot;, se=&quot;bootstrap&quot; , bootstrap=1000)
@@ -3914,14 +4115,14 @@ summary(s2_dep_fit_moderated, standardized=TRUE, fit.measures=TRUE)</code></pre>
 ## 
 ##   Estimator                                         ML
 ##   Optimization method                           NLMINB
-##   Number of model parameters                        15
+##   Number of model parameters                        14
 ## 
 ##   Number of observations                           844
 ## 
 ## Model Test User Model:
 ##                                                       
-##   Test statistic                               709.543
-##   Degrees of freedom                                 3
+##   Test statistic                               709.748
+##   Degrees of freedom                                 4
 ##   P-value (Chi-square)                           0.000
 ## 
 ## Model Test Baseline Model:
@@ -3932,29 +4133,29 @@ summary(s2_dep_fit_moderated, standardized=TRUE, fit.measures=TRUE)</code></pre>
 ## 
 ## User Model versus Baseline Model:
 ## 
-##   Comparative Fit Index (CFI)                    0.271
-##   Tucker-Lewis Index (TLI)                      -2.402
+##   Comparative Fit Index (CFI)                    0.272
+##   Tucker-Lewis Index (TLI)                      -1.548
 ## 
 ## Loglikelihood and Information Criteria:
 ## 
-##   Loglikelihood user model (H0)              -7267.906
+##   Loglikelihood user model (H0)              -7268.009
 ##   Loglikelihood unrestricted model (H1)      -6913.135
 ##                                                       
-##   Akaike (AIC)                               14565.813
-##   Bayesian (BIC)                             14636.885
-##   Sample-size adjusted Bayesian (SABIC)      14589.250
+##   Akaike (AIC)                               14564.019
+##   Bayesian (BIC)                             14630.353
+##   Sample-size adjusted Bayesian (SABIC)      14585.893
 ## 
 ## Root Mean Square Error of Approximation:
 ## 
-##   RMSEA                                          0.528
-##   90 Percent confidence interval - lower         0.496
-##   90 Percent confidence interval - upper         0.561
+##   RMSEA                                          0.457
+##   90 Percent confidence interval - lower         0.429
+##   90 Percent confidence interval - upper         0.486
 ##   P-value H_0: RMSEA &lt;= 0.050                    0.000
 ##   P-value H_0: RMSEA &gt;= 0.080                    1.000
 ## 
 ## Standardized Root Mean Square Residual:
 ## 
-##   SRMR                                           0.197
+##   SRMR                                           0.198
 ## 
 ## Parameter Estimates:
 ## 
@@ -3965,34 +4166,191 @@ summary(s2_dep_fit_moderated, standardized=TRUE, fit.measures=TRUE)</code></pre>
 ## Regressions:
 ##                       Estimate  Std.Err  z-value  P(&gt;|z|)   Std.lv  Std.all
 ##   depression ~                                                             
-##     gn         (a)       0.691    0.328    2.106    0.035    0.691    0.075
-##     vctmztn_sm (b)       0.266    0.099    2.687    0.007    0.266    0.093
-##     slf_rstrnt (c)       0.397    0.085    4.644    0.000    0.397    0.175
-##     dcmntd_fml           0.852    0.483    1.766    0.077    0.852    0.067
+##     gn         (a)       0.691    0.325    2.127    0.033    0.691    0.076
+##     vctmztn_sm (b)       0.266    0.102    2.601    0.009    0.266    0.093
+##     slf_rstrnt (c)       0.397    0.089    4.449    0.000    0.397    0.175
+##     dcmntd_fml           0.852    0.457    1.865    0.062    0.852    0.067
 ##   victimization_sum ~                                                      
-##     gn         (d)       0.577    0.291    1.985    0.047    0.577    0.181
-##     dcmntd_fml          -0.475    0.186   -2.556    0.011   -0.475   -0.108
+##     gn         (d)       0.577    0.270    2.142    0.032    0.577    0.181
+##     dcmntd_fml          -0.475    0.180   -2.635    0.008   -0.475   -0.108
 ##   self_restraint ~                                                         
-##     gn         (e)      -1.047    0.175   -6.002    0.000   -1.047   -0.260
-##     vctmztn_sm (f)       0.016    0.063    0.261    0.794    0.016    0.013
-##     int__LGBTQ (g)       1.366    0.120   11.369    0.000    1.366    0.459
-##     dcmntd_fml          -0.998    0.169   -5.916    0.000   -0.998   -0.179
+##     gn         (e)      -1.041    0.174   -5.973    0.000   -1.041   -0.258
+##     int__LGBTQ (g)       1.370    0.120   11.414    0.000    1.370    0.460
+##     dcmntd_fml          -1.005    0.164   -6.109    0.000   -1.005   -0.180
 ##   gn ~                                                                     
-##     dcmntd_fml           0.247    0.048    5.101    0.000    0.247    0.179
+##     dcmntd_fml           0.247    0.050    4.908    0.000    0.247    0.179
 ## 
 ## Variances:
 ##                    Estimate  Std.Err  z-value  P(&gt;|z|)   Std.lv  Std.all
-##    .depression       36.561    1.783   20.505    0.000   36.561    0.961
-##    .victimizatn_sm    4.455    1.685    2.644    0.008    4.455    0.963
-##    .self_restraint    4.954    0.206   24.010    0.000    4.954    0.670
-##    .gn                0.439    0.022   20.257    0.000    0.439    0.968
+##    .depression       36.561    1.846   19.809    0.000   36.561    0.961
+##    .victimizatn_sm    4.455    1.587    2.807    0.005    4.455    0.963
+##    .self_restraint    4.955    0.208   23.850    0.000    4.955    0.670
+##    .gn                0.439    0.022   20.065    0.000    0.439    0.968
 ## 
 ## Defined Parameters:
 ##                    Estimate  Std.Err  z-value  P(&gt;|z|)   Std.lv  Std.all
-##     ttl_nd_nnLGBTQ   -0.258    0.143   -1.812    0.070   -0.258   -0.028
-##     total_nd_LGBTQ    0.284    0.105    2.694    0.007    0.284    0.052
-##     total_nonLGBTQ    0.433    0.356    1.217    0.224    0.433    0.047
-##     total_LGBTQ       0.975    0.331    2.944    0.003    0.975    0.128</code></pre>
+##     ind_victimiztn    0.154    0.094    1.639    0.101    0.154    0.017
+##     ind_SR_nnLGBTQ   -0.413    0.120   -3.438    0.001   -0.413   -0.045
+##     ind_SR_LGBTQ      0.130    0.057    2.294    0.022    0.130    0.035
+##     ttl_nd_nnLGBTQ   -0.260    0.149   -1.742    0.082   -0.260   -0.028
+##     total_nd_LGBTQ    0.284    0.104    2.724    0.006    0.284    0.052
+##     total_nonLGBTQ    0.431    0.357    1.209    0.227    0.431    0.047
+##     total_LGBTQ       0.975    0.328    2.976    0.003    0.975    0.128
+##     index_modmed      0.544    0.135    4.016    0.000    0.544    0.080</code></pre>
+<p>#6.1.3 Grouped by LGBTQ</p>
+<pre class="r"><code>s2_dep_model &lt;- &#39;
+  depression ~ a*gn + b*victimization_sum + c*self_restraint + documented_female
+  
+  victimization_sum ~ d*gn + documented_female
+  self_restraint ~ e*gn + documented_female
+
+  gn ~ documented_female
+  
+  #effects
+  indirect_victimization := d*b
+  indirect_restraint := e*c
+  total_indirect := b*d + c*e
+  total_effect := a + total_indirect
+&#39;
+
+s2_dep_fit &lt;- sem(s2_dep_model, data=df1, group = &quot;LGBTQ&quot;, estimator=&quot;ML&quot;, se=&quot;bootstrap&quot; , bootstrap=1000)</code></pre>
+<pre><code>## Warning: lavaan-&gt;lavParTable():  
+##    using a single label per parameter in a multiple group setting implies 
+##    imposing equality constraints across all the groups; If this is not 
+##    intended, either remove the label(s), or use a vector of labels (one for 
+##    each group); See the Multiple groups section in the man page of 
+##    model.syntax.</code></pre>
+<pre class="r"><code>summary(s2_dep_fit, standardized=TRUE, fit.measures=TRUE)</code></pre>
+<pre><code>## lavaan 0.6-21 ended normally after 95 iterations
+## 
+##   Estimator                                         ML
+##   Optimization method                           NLMINB
+##   Number of model parameters                        34
+##   Number of equality constraints                     5
+## 
+##   Number of observations per group:                   
+##     1                                              725
+##     0                                              119
+## 
+## Model Test User Model:
+##                                                       
+##   Test statistic                                21.844
+##   Degrees of freedom                                 7
+##   P-value (Chi-square)                           0.003
+##   Test statistic for each group:
+##     1                                            7.010
+##     0                                           14.834
+## 
+## Model Test Baseline Model:
+## 
+##   Test statistic                               146.761
+##   Degrees of freedom                                20
+##   P-value                                        0.000
+## 
+## User Model versus Baseline Model:
+## 
+##   Comparative Fit Index (CFI)                    0.883
+##   Tucker-Lewis Index (TLI)                       0.665
+## 
+## Loglikelihood and Information Criteria:
+## 
+##   Loglikelihood user model (H0)              -7145.839
+##   Loglikelihood unrestricted model (H1)      -7134.917
+##                                                       
+##   Akaike (AIC)                               14349.677
+##   Bayesian (BIC)                             14487.084
+##   Sample-size adjusted Bayesian (SABIC)      14394.989
+## 
+## Root Mean Square Error of Approximation:
+## 
+##   RMSEA                                          0.071
+##   90 Percent confidence interval - lower         0.038
+##   90 Percent confidence interval - upper         0.106
+##   P-value H_0: RMSEA &lt;= 0.050                    0.131
+##   P-value H_0: RMSEA &gt;= 0.080                    0.365
+## 
+## Standardized Root Mean Square Residual:
+## 
+##   SRMR                                           0.030
+## 
+## Parameter Estimates:
+## 
+##   Standard errors                            Bootstrap
+##   Number of requested bootstrap draws             1000
+##   Number of successful bootstrap draws            1000
+## 
+## 
+## Group 1 [1]:
+## 
+## Regressions:
+##                       Estimate  Std.Err  z-value  P(&gt;|z|)   Std.lv  Std.all
+##   depression ~                                                             
+##     gn         (a)       0.676    0.334    2.022    0.043    0.676    0.074
+##     vctmztn_sm (b)       0.265    0.098    2.703    0.007    0.265    0.097
+##     slf_rstrnt (c)       0.390    0.095    4.105    0.000    0.390    0.144
+##     dcmntd_fml           0.985    0.533    1.847    0.065    0.985    0.075
+##   victimization_sum ~                                                      
+##     gn         (d)       0.330    0.143    2.300    0.021    0.330    0.098
+##     dcmntd_fml          -0.413    0.170   -2.428    0.015   -0.413   -0.086
+##   self_restraint ~                                                         
+##     gn         (e)       0.170    0.118    1.440    0.150    0.170    0.050
+##     dcmntd_fml          -0.948    0.179   -5.293    0.000   -0.948   -0.197
+##   gn ~                                                                     
+##     dcmntd_fml           0.331    0.055    6.060    0.000    0.331    0.232
+## 
+## Intercepts:
+##                    Estimate  Std.Err  z-value  P(&gt;|z|)   Std.lv  Std.all
+##    .depression       13.938    0.765   18.226    0.000   13.938    2.244
+##    .victimizatn_sm    0.250    0.230    1.085    0.278    0.250    0.110
+##    .self_restraint    4.620    0.231   20.031    0.000    4.620    2.017
+##    .gn                1.789    0.029   61.324    0.000    1.789    2.639
+## 
+## Variances:
+##                    Estimate  Std.Err  z-value  P(&gt;|z|)   Std.lv  Std.all
+##    .depression       37.027    1.977   18.730    0.000   37.027    0.959
+##    .victimizatn_sm    5.118    1.951    2.623    0.009    5.118    0.987
+##    .self_restraint    5.052    0.223   22.651    0.000    5.052    0.963
+##    .gn                0.435    0.024   18.196    0.000    0.435    0.946
+## 
+## 
+## Group 2 [0]:
+## 
+## Regressions:
+##                       Estimate  Std.Err  z-value  P(&gt;|z|)   Std.lv  Std.all
+##   depression ~                                                             
+##     gn         (a)       0.676    0.334    2.022    0.043    0.676    0.069
+##     vctmztn_sm (b)       0.265    0.098    2.703    0.007    0.265    0.033
+##     slf_rstrnt (c)       0.390    0.095    4.105    0.000    0.390    0.117
+##     dcmntd_fml           0.279    1.140    0.244    0.807    0.279    0.023
+##   victimization_sum ~                                                      
+##     gn         (d)       0.330    0.143    2.300    0.021    0.330    0.276
+##     dcmntd_fml          -0.022    0.148   -0.147    0.883   -0.022   -0.014
+##   self_restraint ~                                                         
+##     gn         (e)       0.170    0.118    1.440    0.150    0.170    0.058
+##     dcmntd_fml          -0.654    0.360   -1.815    0.069   -0.654   -0.177
+##   gn ~                                                                     
+##     dcmntd_fml           0.131    0.114    1.156    0.248    0.131    0.104
+## 
+## Intercepts:
+##                    Estimate  Std.Err  z-value  P(&gt;|z|)   Std.lv  Std.all
+##    .depression       14.125    1.028   13.744    0.000   14.125    2.411
+##    .victimizatn_sm   -0.344    0.204   -1.686    0.092   -0.344   -0.478
+##    .self_restraint    1.661    0.375    4.431    0.000    1.661    0.947
+##    .gn                1.561    0.088   17.820    0.000    1.561    2.591
+## 
+## Variances:
+##                    Estimate  Std.Err  z-value  P(&gt;|z|)   Std.lv  Std.all
+##    .depression       33.579    5.348    6.279    0.000   33.579    0.979
+##    .victimizatn_sm    0.477    0.174    2.745    0.006    0.477    0.924
+##    .self_restraint    2.976    0.413    7.200    0.000    2.976    0.967
+##    .gn                0.359    0.053    6.795    0.000    0.359    0.989
+## 
+## Defined Parameters:
+##                    Estimate  Std.Err  z-value  P(&gt;|z|)   Std.lv  Std.all
+##     indrct_vctmztn    0.087    0.047    1.861    0.063    0.087    0.010
+##     indirct_rstrnt    0.066    0.050    1.338    0.181    0.066    0.007
+##     total_indirect    0.154    0.067    2.286    0.022    0.154    0.017
+##     total_effect      0.829    0.333    2.494    0.013    0.829    0.091</code></pre>
 <div id="including-plots" class="section level2">
 <h2>Including Plots</h2>
 <p>You can also embed plots, for example:</p>
