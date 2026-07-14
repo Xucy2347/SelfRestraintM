@@ -14,7 +14,6 @@ df <- read.csv("lgbtPKU.csv")
 dim(df)
 ```
 
-
 ```{r}
 library(dplyr)
 library(tidyverse)
