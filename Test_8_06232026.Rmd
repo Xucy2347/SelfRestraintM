@@ -613,6 +613,7 @@ s2_dep_model <- '
 s2_dep_fit <- sem(s2_dep_model, data=df1, group = "LGBTQ", estimator="ML", se="bootstrap" , bootstrap=1000)
 summary(s2_dep_fit, standardized=TRUE, fit.measures=TRUE)
 ```
+
 ```{r}
 lm(self_restraint ~ gn + documented_female,
    data=subset(df1, LGBTQ==0))
