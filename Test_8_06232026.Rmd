@@ -425,6 +425,7 @@ s1_dep_model <- '
 s1_dep_fit <- sem(s1_dep_model, data=df1, estimator="ML", se="bootstrap" , bootstrap=1000)
 summary(s1_dep_fit, standardized=TRUE, fit.measures=TRUE)
 ```
+
 #5.1.1. S1 dep   self_esteem ~~ self_restraint
 ```{r}
 library('lavaan')
