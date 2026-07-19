@@ -1,0 +1,245 @@
+---
+title: "Self-restraint as mediator - Anxiety"
+output: html_document
+date: "`r Sys.Date()`
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(semPlot)
+library(lavaan)
+```
+
+#1. Cleaning
+```{r}
+df <- read.csv("lgbtPKU.csv")
+dim(df)
+```
+
+```{r}
+#renaming for categoricals and ordinals
+df <- df %>%
+  rename(
+         grade = Q7,
+         sexual_orientation = Q12,
+         nonconformity_masculine = Q14,
+         nonconformity_feminine = Q15,
+         support_from_queer = Q25_行1,
+         support_from_nonqueer = Q25_行1,
+         )
+
+#manipulations
+df$age <- 33 - df$Q3
+df$mainland <- ifelse(df$Q4 == 1, 1, 0)
+df$han_ethnicity <- 2- df$Q5
+df$department <- factor(df$Q6)
+df$urban_residency <- ifelse(df$Q8 == 1, 1, 0)
+df$self_restraint_teacher <- 5 - df$Q18
+df$documented_male <- 2 - df$Q9
+df$documented_female <- 1 - df$documented_male
+
+df$assigned_male <- ifelse(df$Q10 != 3, 2 - df$Q10, NA)
+df$assigned_female <- 1 - df$assigned_male
+
+df$cisgender <- 2 - df$Q11
+df$transgender <- 1 - df$cisgender
+
+library(fastDummies)
+df <- dummy_cols(df, select_columns = "sexual_orientation", remove_first_dummy = TRUE)
+
+df$singleness <- ifelse(df$Q13 == 1, 1, 0)
+
+df$gn <- ifelse(df$nonconformity_masculine == -3, 
+             df$nonconformity_feminine, df$nonconformity_masculine)
+
+df$outness <- 2 - df$Q16
+df$out_to_teacher <- ifelse(df$Q17 == 1, 1, 0)
+df$public_out = ifelse(df$Q21 == 1, 1, 0)
+df$out_to_queer_friends = ifelse(df$Q23 == -3, 1, df$Q23)
+df$out_to_nonqueer_friends = ifelse(df$Q24 == -3, 1, df$Q24)
+
+#LGBTQ+
+df$LGBTQ <- ifelse(df$Q10 != 3 & df$cisgender == 1 & df$sexual_orientation == 2, 0, 1)
+
+#perceived LGBTQ+-affirming attitude
+df$perceived_acceptance_teacher = 5 - df$Q19
+df$perceived_acceptance_student = 5 - df$Q28
+
+df$victimization_teacher <- 1 - df$Q20_选项17
+df$victimization_student <- 1 - df$Q29_选项14
+df$victimization_ever <- ifelse(df$victimization_teacher == 1 | df$victimization_student == 1, 1, 0)
+
+#Self-restraint of gender expression
+df$self_restraint_allstudent <- 10 - df$Q27_行1 - df$Q27_行2
+df$self_restraint_otherLGBTQ <- 5 - df$Q27_行1
+df$self_restraint_otherstudents <- 5 - df$Q27_行2
+df$self_restraint <- df$self_restraint_teacher + df$self_restraint_allstudent - 3
+
+# self-esteem: Rosenberg Self-Esteem Scale, RSES
+df <- df %>%
+  mutate(
+    Q31_行3_r  = 6 - Q31_行3,
+    Q31_行5_r  = 6 - Q31_行5,
+    Q31_行8_r  = 6 - Q31_行8,
+    Q31_行9_r  = 6 - Q31_行9,
+    Q31_行10_r = 6 - Q31_行10)
+
+df <- df %>%
+  mutate(
+    self_esteem = rowSums(
+      select(., all_of(c(
+        "Q31_行1", "Q31_行2", "Q31_行3_r", "Q31_行4", "Q31_行5_r",
+        "Q31_行6", "Q31_行7", "Q31_行8_r", "Q31_行9_r", "Q31_行10_r"
+      ))),
+      na.rm = TRUE
+    )
+  )
+
+# depression: Center for Epidemiologic Studies Depression Scale, CESD 9-item Chinese version
+df <- df %>%
+  mutate(
+    Q30_行5_r = 5 - Q30_行5,
+    Q30_行7_r = 5 - Q30_行7)
+
+df <- df %>%
+  mutate(
+    depression = Q30_行1 + Q30_行2 + Q30_行3 + Q30_行4 + 
+                 Q30_行5_r + Q30_行6 + Q30_行7_r + Q30_行8 + Q30_行9
+  )
+
+#anxiety: Generalized Anxiety Disorder Scale, GAD-7
+df <- df %>%
+  mutate(
+    anxiety = rowSums(select(., all_of(c("Q32_行1", "Q32_行2", "Q32_行3", "Q32_行4", "Q32_行5", "Q32_行6", "Q32_行7"))),
+                      na.rm = TRUE))
+```
+
+
+```{r}
+#check inconsistent cases
+#transgender
+df %>%
+  filter((documented_female == 1 & assigned_male == 1 & transgender == 0) | (documented_male == 1 & assigned_female == 1 & transgender == 0))
+
+#outness
+df %>%
+  filter((outness == 0 & out_to_teacher== 1) | (outness == 0 & public_out == 1))
+
+
+#outness in nonLGBTQ
+#SOGIE-based victimization among non-LGBTQ+
+df %>%
+  filter(LGBTQ == 0 & outness == 1)
+
+df %>%
+  filter(LGBTQ == 0 & out_to_teacher == 1)
+```
+
+```{r}
+#drop one inconsistent case
+df1 <- df %>%
+  filter(!((documented_female == 1 & assigned_male == 1 & transgender == 0) | (documented_male == 1 & assigned_female == 1 & transgender == 0)) %in% TRUE)
+dim(df1)
+```
+```{r}
+#drop two cases that non-LGBTQ+ reported coming out
+df1 <- df1 %>%
+  filter(!(LGBTQ == 0 & outness == 1))
+dim(df1)
+```
+```{r}
+#drop inconsistent case
+#constantly filling the same value for multiple question matrices
+df1 <- df1 %>%
+  filter(!(index == 1273))
+dim(df1)
+```
+```{r}
+#drop age under 18 (5 cases)
+df1 <- df1 %>%
+  filter(!(age < 18))
+dim(df1)
+```
+
+#6. S2 GN
+```{r}
+#simple linear regression: Mental health ~ Gender nonconformity
+s2s1_dep_model <- lm(depression ~ gn, data = df1)
+summary(s2s1_dep_model)
+
+s2s1_anx_model <- lm(anxiety ~ gn, data = df1)
+summary(s2s1_anx_model)
+```
+
+#6.1.1. S2 dep 
+```{r}
+s2_dep_model <- '
+  depression ~ a*gn + b*victimization_sum + c*self_restraint + documented_female
+  
+  victimization_sum ~ d*gn + documented_female
+  self_restraint ~ e*gn + documented_female
+
+  gn ~ documented_female
+  
+  #effects
+  indirect_victimization := d*b
+  indirect_restraint := e*c
+  total_indirect := b*d + c*e
+  total_effect := a + total_indirect
+'
+
+s2_dep_fit <- sem(s2_dep_model, data=df1, estimator="ML", se="bootstrap" , bootstrap=1000)
+summary(s2_dep_fit, standardized=TRUE, fit.measures=TRUE)
+```
+
+#6.1.2 moderation gn*LGBTQ
+```{r}
+df1$interaction_gn_LGBTQ <- df1$gn * df1$LGBTQ
+
+s2_dep_model_moderated <- '
+  depression ~ a*gn + b*victimization_sum + c*self_restraint + documented_female
+  
+  victimization_sum ~ d*gn + documented_female
+  self_restraint ~ e*gn + g*interaction_gn_LGBTQ + documented_female + LGBTQ
+
+  gn ~ documented_female
+  
+  # indirect effects
+  ind_victimization := b*d
+  ind_SR_nonLGBTQ := e*c
+  ind_SR_LGBTQ := (e+g)*c
+  total_ind_nonLGBTQ := b*d + e*c
+  total_ind_LGBTQ := b*d + (e+g)*c
+  total_nonLGBTQ := a + total_ind_nonLGBTQ
+  total_LGBTQ := a + total_ind_LGBTQ
+  index_modmed := g*c
+'
+
+s2_dep_fit_moderated <- sem(s2_dep_model_moderated, data=df1, estimator="ML", se="bootstrap" , bootstrap=1000)
+summary(s2_dep_fit_moderated, standardized=TRUE, fit.measures=TRUE)
+```
+
+#6.1.3 Grouped by LGBTQ
+```{r}
+s2_dep_model <- '
+  depression ~ gn + victimization_sum + self_restraint + documented_female
+  
+  victimization_sum ~ gn + documented_female
+  self_restraint ~ gn + documented_female
+
+  gn ~ documented_female
+'
+
+s2_dep_fit <- sem(s2_dep_model, data=df1, group = "LGBTQ", estimator="ML", se="bootstrap" , bootstrap=1000)
+summary(s2_dep_fit, standardized=TRUE, fit.measures=TRUE)
+```
+
+```{r}
+lm(self_restraint ~ gn + documented_female,
+   data=subset(df1, LGBTQ==0))
+
+lm(self_restraint ~ gn + documented_female,
+   data=subset(df1, LGBTQ==1))
+```
