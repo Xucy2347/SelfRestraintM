@@ -466,7 +466,7 @@ s2_anx_6.2.2.0_model <- '
   index_modmed := g*c
 '
 
-s2_anx_6.2.2.0_fit <- sem(s2_dep_6.2.2.0_model, data=df1, estimator="ML", se="bootstrap" , bootstrap=1000)
+s2_anx_6.2.2.0_fit <- sem(s2_anx_6.2.2.0_model, data=df1, estimator="ML", se="bootstrap" , bootstrap=1000)
 ```
 
 ```{r}
