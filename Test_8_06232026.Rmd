@@ -8,11 +8,18 @@ date: "2025-10-07"
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
 #1. Cleaning
 ```{r}
-df <- read.csv("lgbtPKU.csv")
+df <- read.csv("C:/Users/sy3248/Desktop/Self-restraint/lgbtPKU.csv")
 dim(df)
 ```
+
 
 ```{r}
 library(dplyr)
@@ -425,7 +432,6 @@ s1_dep_model <- '
 s1_dep_fit <- sem(s1_dep_model, data=df1, estimator="ML", se="bootstrap" , bootstrap=1000)
 summary(s1_dep_fit, standardized=TRUE, fit.measures=TRUE)
 ```
-
 #5.1.1. S1 dep   self_esteem ~~ self_restraint
 ```{r}
 library('lavaan')
@@ -481,27 +487,6 @@ s1_dep_model <- '
 s1_dep_fit <- sem(s1_dep_model, data=df1, estimator="ML", se="bootstrap" , bootstrap=1000)
 summary(s1_dep_fit, standardized=TRUE, fit.measures=TRUE)
 ```
-
-#5.1.3.5 S1 dep victimization → self_restraint
-```{r}
-s1_dep_model <- '
-  depression ~ a*LGBTQ + b*victimization_sum + c*self_restraint + documented_female
-  
-  victimization_sum ~ d*LGBTQ
-  self_restraint ~ e*LGBTQ + f*victimization_sum
-  
-  #effects
-  indirect_victimization := d*b
-  indirect_restraint := e*c
-  indirect_serial := e*f*b
-  total_indirect := b*d + c*e + d*f*c
-  total_effect := a + total_indirect
-'
-
-s1_dep_fit <- sem(s1_dep_model, data=df1, estimator="ML", se="bootstrap" , bootstrap=1000)
-summary(s1_dep_fit, standardized=TRUE, fit.measures=TRUE)
-```
-
 #5.1.4. S1 dep self_restraint → victimization
 ```{r}
 s1_dep_model <- '
@@ -521,11 +506,10 @@ s1_dep_model <- '
 s1_dep_fit <- sem(s1_dep_model, data=df1, estimator="ML", se="bootstrap" , bootstrap=1000)
 summary(s1_dep_fit, standardized=TRUE, fit.measures=TRUE)
 ```
-
-#5.1.5. S1 dep Independent mediators & no direct association
+#5.1.5. S1 dep Independent mediators
 ```{r}
 s1_dep_model <- '
-  depression ~ b*victimization_sum + c*self_restraint + documented_female
+  depression ~ a*LGBTQ + b*victimization_sum + c*self_restraint + documented_female
   
   victimization_sum ~ d*LGBTQ + documented_female
   self_restraint ~ e*LGBTQ + documented_female
@@ -533,7 +517,8 @@ s1_dep_model <- '
   #effects
   indirect_victimization := d*b
   indirect_restraint := e*c
-  total_effect := b*d + c*e
+  total_indeffect := b*d + c*e
+  total_effect := a + total_indeffect
 '
 
 s1_dep_fit <- sem(s1_dep_model, data=df1, estimator="ML", se="bootstrap" , bootstrap=1000)
@@ -547,10 +532,10 @@ s1_anx_model <- '
   anxiety ~ a*LGBTQ + b*victimization_sum + c*self_restraint + documented_female
   
   victimization_sum ~ d*LGBTQ + documented_female
-  self_restraint ~ e*LGBTQ + f*victimization_sum + documented_female
+  self_restraint ~ e*LGBTQ + documented_female
 
   #effects 
-  total_indirect := b*d + c*e + d*f*c
+  total_indirect := b*d + c*e
   total_effect := a + total_indirect
 '
 
@@ -588,7 +573,6 @@ s2_dep_model <- '
 s2_dep_fit <- sem(s2_dep_model, data=df1, estimator="ML", se="bootstrap" , bootstrap=1000)
 summary(s2_dep_fit, standardized=TRUE, fit.measures=TRUE)
 ```
-
 #6.1.2 moderation gn*LGBTQ
 ```{r}
 df1$interaction_gn_LGBTQ <- df1$gn * df1$LGBTQ
@@ -615,7 +599,6 @@ s2_dep_model_moderated <- '
 s2_dep_fit_moderated <- sem(s2_dep_model_moderated, data=df1, estimator="ML", se="bootstrap" , bootstrap=1000)
 summary(s2_dep_fit_moderated, standardized=TRUE, fit.measures=TRUE)
 ```
-
 #6.1.3 Grouped by LGBTQ
 ```{r}
 s2_dep_model <- '
@@ -630,7 +613,6 @@ s2_dep_model <- '
 s2_dep_fit <- sem(s2_dep_model, data=df1, group = "LGBTQ", estimator="ML", se="bootstrap" , bootstrap=1000)
 summary(s2_dep_fit, standardized=TRUE, fit.measures=TRUE)
 ```
-
 ```{r}
 lm(self_restraint ~ gn + documented_female,
    data=subset(df1, LGBTQ==0))
@@ -638,3 +620,14 @@ lm(self_restraint ~ gn + documented_female,
 lm(self_restraint ~ gn + documented_female,
    data=subset(df1, LGBTQ==1))
 ```
+
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
