@@ -1,0 +1,328 @@
+---
+title: "Self-restraint as mediator - EFA Victimization"
+output:
+  html_document:
+    code_folding: hide
+date: "`r Sys.Date()`"
+---
+
+# 0. Setup
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(dplyr)
+library(semPlot)
+library(lavaan)
+library(psych)
+library(gtsummary)
+library(GPArotation)
+library(ggplot2)
+library(purrr)
+library(ggcorrplot)
+
+```
+
+#1. Cleaning
+```{r}
+
+df_r <- read.csv("lgbtPKU.csv")
+```
+
+Raw data dim: `r dim(df_r)`
+
+## renaming for categoricals and ordinals
+
+```{r}
+df <- df_r |>
+  rename(
+         grade = Q7,
+         sexual_orientation = Q12,
+         nonconformity_masculine = Q14,
+         nonconformity_feminine = Q15,
+         support_from_queer = Q25_行1,
+         support_from_nonqueer = Q25_行1
+         ) |>
+  mutate(
+# Sex
+    assigned_male = ifelse(Q10 != 3, 2 - Q10, NA),
+    assigned_female = 1 - assigned_male,
+    documented_male = 2 - Q9,
+    documented_female = 1 - documented_male,
+
+# Age
+    age = 33 - Q3,
+
+# LGBTQ+
+    cisgender = 2 - Q11,
+    transgender = 1 - cisgender,
+    LGBTQ = ifelse(Q10 != 3 & cisgender == 1 & sexual_orientation == 2, 0, 1),
+
+# outness
+    outness = 2 - Q16,
+    out_to_teacher = ifelse(Q17 == 1, 1, 0),
+    public_out = ifelse(Q21 == 1, 1, 0),
+    out_to_queer_friends = ifelse(Q23 == -3, 1, Q23),
+    out_to_nonqueer_friends = ifelse(Q24 == -3, 1, Q24),
+
+# Victimization and perceived LGBTQ+ affirming attitude
+    perceived_acceptance_teacher = 5 - Q19,
+    perceived_acceptance_student = 5 - Q28,
+
+    victimization_teacher = 1 - Q20_选项17,
+    victimization_student = 1 - Q29_选项14,
+    victimization_ever = ifelse(victimization_teacher == 1 | victimization_student == 1, 1, 0),
+
+#Self-restraint of gender expression
+    self_restraint_teacher = 5 - Q18,
+    self_restraint_allstudent = 10 - Q27_行1 - Q27_行2,
+    self_restraint_otherLGBTQ = 5 - Q27_行1,
+    self_restraint_otherstudents = 5 - Q27_行2,
+    self_restraint = self_restraint_teacher + self_restraint_allstudent - 3,
+
+# self-esteem: Rosenberg Self-Esteem Scale, RSES
+    Q31_行3_r  = 6 - Q31_行3,
+    Q31_行5_r  = 6 - Q31_行5,
+    Q31_行8_r  = 6 - Q31_行8,
+    Q31_行9_r  = 6 - Q31_行9,
+    Q31_行10_r = 6 - Q31_行10,
+
+    self_esteem = rowSums(
+      pick(all_of(c(
+        "Q31_行1", "Q31_行2", "Q31_行3_r", "Q31_行4", "Q31_行5_r", "Q31_行6", "Q31_行7", "Q31_行8_r", "Q31_行9_r", "Q31_行10_r"
+      ))),
+      na.rm = TRUE
+    ),
+
+
+# depression: Center for Epidemiologic Studies Depression Scale, CESD 9-item Chinese version
+    Q30_行5_r = 5 - Q30_行5,
+    Q30_行7_r = 5 - Q30_行7,
+    depression = Q30_行1 + Q30_行2 + Q30_行3 + Q30_行4 + Q30_行5_r + Q30_行6 + Q30_行7_r + Q30_行8 + Q30_行9,
+  
+#anxiety: Generalized Anxiety Disorder Scale, GAD-7
+    anxiety = rowSums(
+      pick(all_of(c("Q32_行1", "Q32_行2", "Q32_行3", "Q32_行4", "Q32_行5", "Q32_行6", "Q32_行7"))), na.rm = TRUE
+    )
+  )
+```
+
+Renamed data dim: `r dim(df)`
+
+
+## drop inconsistent cases
+```{r}
+
+#drop one inconsistent case
+df1 <- df |>
+  filter(!((documented_female == 1 & assigned_male == 1 & transgender == 0) | (documented_male == 1 & assigned_female == 1 & transgender == 0)) %in% TRUE) |>
+
+#drop two cases that non-LGBTQ+ reported coming out
+  filter(!(LGBTQ == 0 & outness == 1)) |> 
+
+#constantly filling the same value for multiple question matrices
+  filter(!(index == 1273)) |>
+
+#drop age under 18 (5 cases)
+  filter(!(age < 18))
+```
+
+Dim after some obs dropped: `r dim(df1)`
+
+#2.3. victm EFA
+
+```{r}
+vic_q <- df1 |>
+  select(
+    # Q20
+    Q20_选项1, Q20_选项2, Q20_选项3, Q20_选项4, Q20_选项5,
+    Q20_选项6, Q20_选项7, Q20_选项8, Q20_选项9, Q20_选项10,
+    Q20_选项11, Q20_选项12, Q20_选项13, Q20_选项14, Q20_选项15,
+
+    # Q29
+    Q29_选项1, Q29_选项2, Q29_选项3, Q29_选项4, Q29_选项5,
+    Q29_选项6, Q29_选项7, Q29_选项8, Q29_选项9, Q29_选项10,
+    Q29_选项11, Q29_选项12
+  )
+
+# Give items shorter names for easier interpretation
+names(vic_q) <- c(
+  paste0("Q20_", 1:15),
+  paste0("Q29_", 1:12)
+)
+```
+
+Questions on Victimization: `r names(vic_q)`
+
+## 1. Check
+```{r}
+# Find variables that contain only 0, 1, and possibly NA
+binary_vars <- vic_q |>
+  select(where(~ all(na.omit(.) %in% c(0, 1)))) |>
+  names()
+
+# Calculate percentage of 0 and 1 for each variable
+plot_data <- vic_q |>
+  select(all_of(binary_vars)) |>
+  pivot_longer(
+    cols = everything(),
+    names_to = "variable",
+    values_to = "value"
+  ) |>
+  filter(!is.na(value)) |>
+  count(variable, value) |>
+  group_by(variable) |>
+  mutate(
+    percentage = n / sum(n) * 100
+  ) |>
+  ungroup()
+
+# Plot
+plot_data |>
+
+  ggplot(
+    aes(x = variable, y = percentage, fill = factor(value))
+  ) +
+  geom_col(
+    width = 0.7
+  ) +
+  geom_text(
+    aes(label = paste0(round(percentage, 1), "%")),
+    position = position_dodge(width = 0.8),
+    vjust = -0.3,
+    size = 3
+  ) +
+  scale_y_continuous(
+    limits = c(0, 105),
+    breaks = seq(0, 100, 20),
+    labels = function(x) paste0(x, "%")
+  ) +
+  labs(
+    x = NULL,
+    y = "Percentage",
+    fill = "Value",
+    title = "Distribution of 0/1 in Victimization Related Questions"
+  ) +
+  theme_classic() +
+    theme(
+      axis.text.x = element_text(
+        angle = 45,
+        hjust = 1
+      )
+    ) +
+  coord_flip()
+```
+
+Slightly too many 0s.
+"The problem is that for binary variables, extremely rare 1s provide very little information about how items relate to each other. This becomes especially important in your analysis because you’re using tetrachoric correlations." - chatgpt
+
+## 2. Delete those with 0 variance and with 99% 0 
+```{r}
+
+vars_to_remove = names(vic_q)[sapply(vic_q, function(x) {
+  x <- x[!is.na(x)]
+  length(x) == 0 ||
+    length(unique(x)) == 1 ||     # zero variance
+    mean(x == 0) >= 0.99         # 99.5% or more are 0
+})]
+
+vic_clean = vic_q |>
+  select(-all_of(vars_to_remove))
+```
+
+
+Deleted variables: `r vars_to_remove`
+
+
+## 3. Tetrachoric correlation matrix
+
+For binary items, this is preferable to ordinary Pearson correlations:
+```{r}
+corr <- tetrachoric(vic_clean)
+eigen(corr$rho)$values
+ggcorrplot(corr$rho, lab = TRUE)
+```
+
+## 4. Scree Plot
+```{r}
+eigen = fa.parallel(vic_clean, cor='poly', fa = "pc")
+```
+
+Eigenvalues
+```{r}
+round(eigen$pc.values, digit = 2)
+```
+
+## 5. EFA
+
+### 3-factor
+```{r}
+efa_3 <- fa(
+  corr$rho,
+  nfactors = 3,
+  n.obs = nrow(vic_clean),
+  fm = "minres",
+  rotate = "oblimin"
+)
+efa_3
+efa_3$loadings
+```
+
+EFA3: communality and uniqueness 
+```{r}
+efa_3$communality
+efa_3$uniquenesses
+```
+
+Communality is the proportion of an item’s variance explained by the common factors in your EFA.
+Uniqueness is the portion not explained by the common factors:
+
+***Q20——选项4 Q20_选项15 require further investigation.***
+
+Q20_4   $h^2$ = 1.026 $\leftarrow$ improper
+Q20_15  $h^2$ = 1.062 $\leftarrow$ improper
+Q29_4   $h^2$ = 0.945 $\leftarrow$ technically proper, but unusually high
+
+```{r}
+colMeans(vic_clean[, c("Q20_4", "Q20_15", "Q29_4")], na.rm = TRUE)
+round(corr$rho[c("Q20_4", "Q20_15", "Q29_4"), ], 3)
+```
+
+
+### neighbors
+```{r}
+efa_2 <- fa(
+  corr$rho,
+  nfactors = 2,
+  n.obs = nrow(vic_clean),
+  fm = "minres",
+  rotate = "oblimin"
+)
+efa_2
+efa_2$loadings
+```
+
+EFA2: communality and uniqueness 
+```{r}
+efa_2$communality
+efa_2$uniquenesses
+```
+
+```{r}
+efa_4 <- fa(
+  corr$rho,
+  nfactors = 4,
+  n.obs = nrow(vic_clean),
+  fm = "minres",
+  rotate = "oblimin"
+)
+efa_4
+efa_4$loadings
+```
+
+EFA4: communality and uniqueness 
+```{r}
+efa_4$communality
+efa_4$uniquenesses
+```
+
